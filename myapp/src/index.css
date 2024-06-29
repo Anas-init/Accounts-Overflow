@@ -1,13 +1,14 @@
 .logo-class {
     display: inline-block;
-    margin-left: 125px;
-    vertical-align: middle; /* Ensures vertical alignment with the span */
+    position: fixed;
+    margin-left: 80px;
 }
-
 .Navbar-class span {
-    margin-left: 10px;
-    vertical-align: middle; /* Ensures vertical alignment with the logo-class */
-    font-size: 23px;
+    display: block;
+    margin-left: 115px;
+    position: relative;
+    padding-top: 3px;
+    font-size: 19px;
     background: -webkit-linear-gradient(#111313, #a8a4f5);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

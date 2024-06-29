@@ -8,7 +8,7 @@ const Navbar = () => {
   return (
     <div className='Navbar-class'>
       <div className='logo-class'>
-      <FaStackOverflow size={35} color='fb8500'></FaStackOverflow>
+      <FaStackOverflow size={30} color='fb8500'></FaStackOverflow>
       </div>
       <span>Accounts Overflow.</span>
     </div>
