@@ -11,6 +11,7 @@ const Navbar = () => {
       <FaStackOverflow size={30} color='fb8500'></FaStackOverflow>
       </div>
       <span>Accounts Overflow.</span>
+      <input type="text" placeholder='Search'/>
     </div>
   );
 };
