@@ -57,4 +57,11 @@ class MyUser(AbstractBaseUser):
     def is_staff(self):
         "Is the user a member of staff?"
         return self.is_admin
-    
+class Questions(models.Model):
+    username = models.ForeignKey(MyUser)
+    text=models.CharField()
+    tags = models.CharField()
+class Answers(models.Model):
+    question=models.ForeignKey(Questions,on_delete=models.CASCADE)
+    username=models.ForeignKey(MyUser,on_delete=models.CASCADE)
+    answer = models.CharField()
