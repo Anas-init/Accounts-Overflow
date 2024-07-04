@@ -4,6 +4,7 @@ function App() {
   return (
     <div className="App">
       <Navbar/>
+      <div >J;eda;skd</div>
 
     </div>
   );

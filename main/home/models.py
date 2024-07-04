@@ -67,7 +67,7 @@ class Questions(models.Model):
         for i in self.tags:
             if i == ',':
                 count +=1
-        if count==4:
+        if count==1:
             return super().save(*args, **kwargs)
         else:
             return  
