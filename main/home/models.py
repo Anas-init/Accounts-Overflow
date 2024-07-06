@@ -59,7 +59,7 @@ class MyUser(AbstractBaseUser):
         return self.is_admin
 class Questions(models.Model):
     username = models.ForeignKey(MyUser,on_delete=models.CASCADE)
-    text=models.CharField()
+    question_text=models.TextField()
     tags = models.CharField()
     csv_file=models.FileField()
     def save(self, *args, **kwargs):
@@ -70,10 +70,14 @@ class Questions(models.Model):
         if count==1:
             return super().save(*args, **kwargs)
         else:
-            return  
+            return -1
         
 class Answers(models.Model):
     question=models.ForeignKey(Questions,on_delete=models.CASCADE)
     username=models.ForeignKey(MyUser,on_delete=models.CASCADE)
     answer = models.CharField()
+    answer_text=models.TextField()
+    votes=models.IntegerField()
+    total_answer=models.IntegerField()
+    total_views=models.IntegerField()
     
