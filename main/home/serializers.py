@@ -87,14 +87,14 @@ class UserPasswordResetViewSerializer(serializers.Serializer):
       password2=attrs.get('password2')
       if password != password2:
         raise serializers.ValidationError("Token is Invalid")
-      id=smart_str(urlsafe_base64_decode(self.context.get('uid')))
-      user=MyUser.objects.get(id=id)
+      ID=smart_str(urlsafe_base64_decode(self.context.get('uid')))
+      user=MyUser.objects.get(id=ID)
       token=self.context.get('token') 
       if not PasswordResetTokenGenerator().check_token(user, token):
         raise serializers.ValidationError("Token is invalid or expired")
       user.set_password(password)
       user.save()
       return attrs     
-    except DjangoUnicodeDecodeError as identifier:
+    except DjangoUnicodeDecodeError:
       PasswordResetTokenGenerator().check_token(user,token)
       raise serializers.ValidationError("Token is invalid")
