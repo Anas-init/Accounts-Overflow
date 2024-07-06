@@ -17,9 +17,9 @@ const Sidebar = (sideBarProps) => {
         )
     }
 
-    const sideBarDisplay = (sideBarProps.toggleSideBarDisplay) ? " max-[600px]:left-0 z-20 top-[20rem]" : " max-[600px]:-left-52";
+    const sideBarDisplay = (sideBarProps.toggleSideBarDisplay) ? " max-[600px]:left-0 z-20" : " max-[600px]:-left-52";
     return (
-        <div className={'w-52 h-[110vh] border-r-2 border-r-gray-300 overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent fixed transition-all top-[10vh] max-[600px]:top-[12.3rem] bg-white' + sideBarDisplay}>
+        <div className={'w-52 h-[110vh] border-r-2 border-r-gray-300 overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent fixed transition-all top-[10vh] max-[600px]:top-[15.7rem] bg-white' + sideBarDisplay}>
             <Section tag1="Home" iconTag1={IoHomeSharp} tag2="Questions" iconTag2={MdQuestionAnswer} tag3="Tags" iconTag3={IoPricetagsSharp} />
             <Section tag1="Home" iconTag1={IoHomeSharp} tag2="Questions" iconTag2={MdQuestionAnswer} tag3="Tags" iconTag3={IoPricetagsSharp} />
             <Section tag1="Home" iconTag1={IoHomeSharp} tag2="Questions" iconTag2={MdQuestionAnswer} tag3="Tags" iconTag3={IoPricetagsSharp} />
