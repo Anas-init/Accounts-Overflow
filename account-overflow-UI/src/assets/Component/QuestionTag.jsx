@@ -1,6 +1,5 @@
 import React from 'react'
 import Tag from "./Tag"
-
 const QuestionTag = () => {
   return (
     <div className='w-full flex border-t-2 border-gray-300 py-3'>
@@ -18,7 +17,6 @@ const QuestionTag = () => {
             </span>
             <div className='p-1 w-full'>
                 <span className='font-semibold'>Tags:</span>
-                <Tag tagName="java" />
                 <Tag tagName="java" />
                 <Tag tagName="java" />
                 <Tag tagName="java" />

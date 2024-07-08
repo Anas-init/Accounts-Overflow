@@ -2,6 +2,7 @@ import React from 'react'
 import { CgProfile } from "react-icons/cg";
 import { GiDiamondTrophy } from "react-icons/gi";
 import { MdHelpCenter } from "react-icons/md";
+import Registration from './register';
 
 const Navbar = (navBarProps) => {
   return (
@@ -15,9 +16,10 @@ const Navbar = (navBarProps) => {
         
         {/* Icons */}
         <div className='flex justify-around h-full items-center'>
-            <CgProfile className='h-[100%] w-6 mx-3 cursor-pointer rounded-md hover:bg-gray-200' />
+            <CgProfile className='h-[100%] w-6 mx-3 cursor-pointer rounded-md hover:bg-gray-200'/>
             <GiDiamondTrophy className='h-[100%] w-6 mx-3 cursor-pointer rounded-md hover:bg-gray-200' />
             <MdHelpCenter className='h-[100%] w-6 mx-3 cursor-pointer rounded-md hover:bg-gray-200' />
+            <Registration/>
         </div>
         
         {/* Hamburger */}
