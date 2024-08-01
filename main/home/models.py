@@ -58,26 +58,17 @@ class MyUser(AbstractBaseUser):
         "Is the user a member of staff?"
         return self.is_admin
 class Questions(models.Model):
-    username = models.ForeignKey(MyUser,on_delete=models.CASCADE)
+    user = models.ForeignKey(MyUser,on_delete=models.CASCADE,blank=True)
+    que_csv_file = models.FileField()
     question_text=models.TextField()
     tags = models.CharField()
-    csv_file=models.FileField()
-    def save(self, *args, **kwargs):
-        count=0
-        for i in self.tags:
-            if i == ',':
-                count +=1
-        if count==1:
-            return super().save(*args, **kwargs)
-        else:
-            return -1
-        
+    def __str__(self):
+        return self.question_text
 class Answers(models.Model):
     question=models.ForeignKey(Questions,on_delete=models.CASCADE)
-    username=models.ForeignKey(MyUser,on_delete=models.CASCADE)
-    answer = models.CharField()
+    user=models.ForeignKey(MyUser,on_delete=models.CASCADE)
+    ans_csv_file=models.FileField()
     answer_text=models.TextField()
     votes=models.IntegerField()
-    total_answer=models.IntegerField()
     total_views=models.IntegerField()
     
