@@ -1,0 +1,159 @@
+import React from "react";
+import "./AskQuestionPage.css";
+
+const AskQuestionPage = () => {
+  const resetAll = () => {
+
+    const allUserInputBoxes = document.querySelectorAll(".userInputBox");
+    const main_question_container = document.querySelector(".main-question-container");
+    const allSections = document.querySelectorAll(".section");
+
+    if(main_question_container.firstChild.classList.contains('error-message'))
+      main_question_container.removeChild(main_question_container.firstChild);
+    
+    for (let i = 0; i < allSections.length; i++)
+      allSections[i].classList.remove('border-red-400');
+    
+    for (let i = 0; i < allUserInputBoxes.length; i++)
+      allUserInputBoxes[i].value = "";
+
+    window.scrollTo(top);
+
+  };
+
+  const submitQuestion = () => {
+
+    
+    const main_question_container = document.querySelector(".main-question-container");
+    const allSections = document.querySelectorAll(".section");
+    const allUserInputBoxes = document.querySelectorAll(".userInputBox");
+
+    let questionCharactersCount = 0;
+    let isCSVFile = (allUserInputBoxes[1].value == "") ? true : (allUserInputBoxes[1].value.substr(allUserInputBoxes[1].value.length - 3, 3) != "csv") ? false : true;
+  
+    let tagsCount = 0;
+
+    for (let i = 0; i < allUserInputBoxes[0].value.length; i++) {
+      if (
+        (allUserInputBoxes[0].value.charAt(i) >= "a" &&
+          allUserInputBoxes[0].value.charAt(i) <= "z") ||
+        (allUserInputBoxes[0].value.charAt(i) >= "A" &&
+          allUserInputBoxes[0].value.charAt(i) <= "Z")
+      ) {
+        questionCharactersCount++;
+        if (questionCharactersCount == 15) break;
+      }
+    }
+
+    for (let i = 0; i < allUserInputBoxes[2].value.length; i++) {
+      if (allUserInputBoxes[2].value.charAt(i) == ",") {
+        tagsCount++;
+        if (tagsCount == 2) break;
+      }
+    }
+
+    let displayErrorMessage = false;
+    if(questionCharactersCount < 15) {
+      allSections[0].classList.add('border-red-400');
+      displayErrorMessage = true;
+    }
+    else
+      allSections[0].classList.remove('border-red-400');
+
+    if(isCSVFile === false) {
+      allSections[1].classList.add('border-red-400');
+      displayErrorMessage = true;
+    }
+    else
+      allSections[1].classList.remove('border-red-400');
+    
+    if(tagsCount < 2) {
+      allSections[2].classList.add('border-red-400');
+      displayErrorMessage = true;
+    }
+    else
+      allSections[2].classList.remove('border-red-400');
+
+    if(displayErrorMessage) {
+
+        if(!main_question_container.firstChild.classList.contains('error-message')) {
+            const error_element = document.createElement('div');
+            error_element.innerHTML = `"Instructions not followed in the red outlined sections!"`;
+            error_element.classList = ['error-message text-red-600 font-semibold text-lg'];
+            main_question_container.insertBefore(error_element, main_question_container.firstChild);
+        }
+
+        window.scrollTo(top);
+
+    } else {
+
+      if(main_question_container.firstChild.classList.contains('error-message'))
+        main_question_container.removeChild(main_question_container.firstChild);
+    
+    }
+
+  };
+
+  return (
+    <div className="flex flex-col h-max relative left-52 w-[85%] max-[600px]:left-0 max-[600px]:w-full z-0 top-[3.95rem] px-12 py-12">
+      <h1 className="text-black text-3xl font-bold">Ask a Public Question</h1>
+
+      <div className="main-question-container flex flex-col my-5 gap-5">
+        <div className="section flex flex-col border-2 border-gray-400 gap-2 p-8 rounded">
+          <div className="font-bold">What are the details of your problem?</div>
+          <div>
+            Write a precise description of your problem. Minimum 15 English
+            characters.
+          </div>
+          <textarea
+            required
+            className="userInputBox border-2 border-gray-300 px-2 py-1 rounded"
+            rows={6}
+            name=""
+            id=""
+          />
+        </div>
+
+        <div className="section flex flex-col border-2 border-gray-400 gap-2 p-8 rounded">
+          <div className="font-bold">Add a CSV File (Optional)</div>
+          <div>
+            Add a CSV File if your problem requires some CSV specific details.
+          </div>
+          <input className="userInputBox" type="file" name="" id="" />
+        </div>
+
+        <div className="section flex flex-col border-2 border-gray-400 gap-2 p-8 rounded">
+          <div className="font-bold">Tags</div>
+          <div>
+            Add upto 3 tags to describe what your question is about. Add Comma (
+            , ) Seperated tags.
+          </div>
+          <textarea
+            required
+            className="userInputBox border-2 border-gray-300 px-2 py-1 rounded"
+            rows={1}
+            name=""
+            id=""
+          />
+        </div>
+
+        <div className="flex justify-between">
+          <button
+            className="bg-blue-500 border-2 border-blue-500 text-white px-5 py-1 rounded"
+            onClick={submitQuestion}
+          >
+            Post
+          </button>
+          <button
+            className="bg-transparent border-2 border-red-500 text-red-500 px-5 py-1 rounded"
+            onClick={resetAll}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AskQuestionPage;

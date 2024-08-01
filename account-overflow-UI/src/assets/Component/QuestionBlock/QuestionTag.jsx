@@ -1,8 +1,8 @@
 import React from 'react'
-import Tag from "./Tag"
+import Tag from "../Buttons/Tag"
 const QuestionTag = () => {
   return (
-    <div className='w-full flex border-t-2 border-gray-300 py-3'>
+    <div className='w-full flex border-t-2 border-t-gray-300 py-3'>
         
         <div className='w-32 p-2 flex flex-col gap-1 justify-center'>
             <span className='font-semibold'>Views: 0</span>
