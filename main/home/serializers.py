@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from home.models import MyUser
+from home.models import MyUser,Questions,Answers
 from django.utils.encoding import smart_str, force_bytes, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -7,7 +7,7 @@ from .utils import Utils
 
     
 class UserRegisterSerializer(serializers.ModelSerializer):
-  # We are writing this becoz we need confirm password field in our Registratin Request
+  # We are writing this becoz we need confirm password field in our Registration Request
   password2 = serializers.CharField(style={'input_type':'password'}, write_only=True)
   class Meta:
     model = MyUser
@@ -98,3 +98,75 @@ class UserPasswordResetViewSerializer(serializers.Serializer):
     except DjangoUnicodeDecodeError:
       PasswordResetTokenGenerator().check_token(user,token)
       raise serializers.ValidationError("Token is invalid")
+    
+    
+def check_tags(value):
+  count=0
+  for i in value:
+    if i==',':
+      count+=1
+  if count<1 or count>1:
+    raise serializers.ValidationError("Tags must be 2 ") 
+  else:
+    return value
+  
+  
+def validate_file_size(value):
+    filesize = value.size
+    if filesize > 5242880:  # 5MB in bytes
+        raise serializers.ValidationError("The maximum file size that can be uploaded is 5MB")
+    else:
+        return value
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+  tags=serializers.CharField(max_length=100,validators=[check_tags])
+  que_csv_file=serializers.FileField(validators=[validate_file_size])
+  class Meta:
+    model=Questions
+    fields='__all__'
+  def validate(self,attrs):
+    request=self.context.get('request')
+    if request and not request.user.is_authenticated:
+      raise serializers.ValidationError("User must be logged in")
+    else:
+      return attrs
+  def create(self,validated_data):
+    request=self.context.get('request')
+    validated_data['user']=request.user
+    return super().create(validated_data)    
+  
+class QuestionRecordSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email', read_only=True)
+    name = serializers.CharField(source='user.name', read_only=True)
+    class Meta:
+        model = Questions
+        fields = ['email', 'name', 'question_text', 'tags','que_csv_file']
+  
+    
+class AnswerSerializer(serializers.ModelSerializer):
+  ans_csv_file=serializers.FileField(validators=[validate_file_size])
+  class Meta:
+    model=Answers
+    fields='__all__'
+  def validate(self,attrs):
+    request=self.context.get('request')
+    if request and not request.user.is_authenticated:
+      raise serializers.ValidationError("User must be logged in")
+    else:
+      return attrs   
+
+class AnswerInfoSerializer(serializers.ModelSerializer):
+  user=UserProfileSerializer(read_only=True)
+  class Meta:
+    model=Answers
+    fields=['user', 'answer_text','total_views','votes','ans_csv_file']
+class AnswerRecordSerializer(serializers.ModelSerializer):
+  user= UserProfileSerializer(read_only=True)
+  answers=serializers.SerializerMethodField()
+  class Meta:
+    model=Questions
+    fields=['question_text','que_csv_file','tags','user','answers']
+  def get_answers(self,obj):
+      answers=Answers.objects.filter(question=obj)
+      return AnswerInfoSerializer(answers,many=True).data
