@@ -2,10 +2,10 @@ import React from 'react'
 import { CgProfile } from "react-icons/cg";
 import { GiDiamondTrophy } from "react-icons/gi";
 import { MdHelpCenter } from "react-icons/md";
-// import Registration from '../Registration/Register';
-import { NavLink } from 'react-router-dom';
-import {useSideBarStore} from '../ZustandStore/sidebar-store'
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useSideBarStore } from '../ZustandStore/sidebar-store'
 import { useHamburgerStore } from '../ZustandStore/hamburger-store';
+import { useUserCredentials } from '../ZustandStore/user-credentials-store';
 
 const Icon = (iconProps) => {
   return (
@@ -17,13 +17,10 @@ const Icon = (iconProps) => {
 
 const Navbar = () => {
 
-  const {toggleSideBarStatus} = useSideBarStore((state) =>({
-    toggleSideBarStatus: state.toggleSideBarStatus
-  }));
-
-  const {visibility} = useHamburgerStore((state) => ({
-    visibility: state.visibility
-  }));
+  const {toggleSideBarStatus} = useSideBarStore();
+  const {visibility} = useHamburgerStore();
+  const {authTokens, logOutUser} = useUserCredentials();
+  const navigate = useNavigate();
 
   return (
     <div className='w-[100%] h-[10vh] max-[600px]:gap-2 flex items-center justify-between border-b-2 border-b-gray-300 border-t-4 border-t-yellow-300 fixed z-20 bg-white max-[400px]:overflow-x-scroll pl-3 pr-4' >
@@ -37,8 +34,8 @@ const Navbar = () => {
       </div>
 
       {/* Logo */}
-      <img className='h-[8vh] w-64 object-cover ml-3 max-[600px]:hidden' src="./src/assets/account-overflow-logo-final.jpg" alt="No Image" />
-      <img className='h-[8vh] w-64 aspect-video object-cover hidden max-[600px]:block' src="./src/assets/account-overflow-logo-without-header.jpg" alt="No Image" />
+      <img className='h-[8vh] w-64 object-cover ml-3 max-[600px]:hidden' src="./src/assets/account-overflow-logo-final.jpg" alt="account overflow" />
+      <img className='h-[8vh] w-64 aspect-video object-cover hidden max-[600px]:block' src="./src/assets/account-overflow-logo-without-header.jpg" alt="account overflow" />
 
       {/* Search */}
       <input className='border-2 border-gray-400 w-[50vw] h-[6vh] px-5 py-3 rounded max-[600px]:w-[100vw] max-[600px]:mr-4' placeholder='Search...' type="text" name="search" id="searchBar" />
@@ -51,7 +48,12 @@ const Navbar = () => {
         {/* <Registration /> */}
       </div>
 
-      <NavLink to={"/signIn"} className={ (e) => (e.isActive) ? 'hidden' : 'bg-blue-500 text-white py-2 px-4 rounded-full max-[600px]:hidden'}>Sign In</NavLink>
+      {
+        (authTokens == null) ? 
+        <NavLink to={"/signIn"} className={ (e) => (e.isActive) ? 'hidden' : 'bg-blue-500 text-white text-center py-2 px-4 rounded-full '}>Sign In</NavLink>
+        :
+        <button onClick={() => { navigate("/"); logOutUser(); }} className='bg-blue-500 text-white text-center py-2 px-4 rounded-full'>Log Out</button>
+      }
 
     </div>
   )

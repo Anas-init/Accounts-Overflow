@@ -4,7 +4,7 @@ export const useSideBarStore = create((set) => ({
 
     showSideBar: true,
     toggleSideBarStatus: () => set((state) => ({showSideBar: !state.showSideBar})),
-    changeSideBarStatus: (changeState) => set(() => ({showSideBar: changeState})),
+    changeSideBarStatus: (changeState) => set({showSideBar: changeState}),
 
 })); 
 
