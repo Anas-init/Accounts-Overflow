@@ -1,8 +1,10 @@
-import React, { forwardRef } from "react";
+import React, { useState } from "react";
 import { FaLock } from "react-icons/fa";
 import { FaUserAlt } from "react-icons/fa";
-import { NavLink } from "react-router-dom";
+import { json, NavLink, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useUserCredentials } from "../ZustandStore/user-credentials-store";
+import axios from "../Axios/axios";
 
 const InputSection = ({
   field,
@@ -34,6 +36,11 @@ const InputSection = ({
 };
 
 const SignIn = () => {
+
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const {setAuthTokens} = useUserCredentials();
+
   const {
     register,
     handleSubmit,
@@ -64,7 +71,19 @@ const SignIn = () => {
   ];
 
   const verifyAndLogin = (data) => {
-    setTimeout(() => console.log(data), 2000);
+
+    axios
+      .post("/login/", data)
+      .then((response) => {
+        setAuthTokens(response.data.token);
+        setError('');
+        window.localStorage.setItem("token", JSON.stringify(response.data.token));
+        navigate("/");
+      })
+      .catch((error) => {
+        setError(error?.response?.data?.message);
+      });
+
   };
 
   return (
@@ -74,6 +93,7 @@ const SignIn = () => {
         onSubmit={handleSubmit(verifyAndLogin)}
       >
         <h1 className="text-3xl font-bold">Sign In</h1>
+        { error != '' && <p className="text-red-600 text-center h-1 w-full mt-2 mb-4 ml-3" >{error}</p> }
 
         <InputSection
           field="Email"

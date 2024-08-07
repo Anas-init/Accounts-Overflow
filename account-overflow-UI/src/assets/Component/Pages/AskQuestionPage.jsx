@@ -3,6 +3,7 @@ import "./AskQuestionPage.css";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
+import Section_1 from "../User Input Sections/Section_1";
 
 const AskQuestionPage = () => {
   const resetAll = () => {
@@ -32,16 +33,16 @@ const AskQuestionPage = () => {
     question: yup
       .string()
       .required("This is a required field")
-      .matches(/[A-Z a-z 0-9]{15,}/, "Minimum Length criteria must be followed"),
+      .matches(
+        /[A-Z a-z 0-9]{15,}/,
+        "Minimum Length criteria must be followed"
+      ),
     csvFile: yup
       .mixed()
       .test("is-valid-file", "Only CSV Files are acceptable", (value) => {
-
-        return value[0]?.name.split('.')[1] === "csv" || value.length === 0;
-        
+        return value[0]?.name.split(".")[1] === "csv" || value.length === 0;
       })
       .notRequired(),
-      // .matches(/[a-zA-Z0-9]+\.csv/, "Only CSV files are acceptable"),
     tags: yup
       .string()
       .required("This is a required field")
@@ -67,58 +68,52 @@ const AskQuestionPage = () => {
       <h1 className="text-black text-3xl font-bold">Ask a Public Question</h1>
 
       <div className="main-question-container flex flex-col my-5 gap-5">
-        <div className="section flex flex-col border-2 border-gray-400 gap-2 p-8 rounded">
-          <div className="font-bold">What are the details of your problem?</div>
-          <div>
-            Write a precise description of your problem. Minimum 15 English
-            characters.
-          </div>
-          {errors.question && (
-            <div className="text-red-600"> {errors.question.message} </div>
-          )}
-          <textarea
-            className="userInputBox border-2 border-gray-300 px-2 py-1 rounded"
-            rows={6}
-            name=""
-            id=""
-            {...register("question")}
-          />
-        </div>
 
-        <div className="section flex flex-col border-2 border-gray-400 gap-2 p-8 rounded">
-          <div className="font-bold">Add a CSV File (Optional)</div>
-          <div>
-            Add a CSV File if your problem requires some CSV specific details.
-          </div>
-          {errors.csvFile && (
-            <div className="text-red-600"> {errors.csvFile.message} </div>
-          )}
-          <input
-            className="userInputBox"
-            type="file"
-            name=""
-            id=""
-            {...register("csvFile", { required: false })}
-          />
-        </div>
+        <Section_1
+          header="What are the details of your problem?"
+          description="Write a precise description of your problem. Minimum 15 English
+            characters."
+          register={register}
+          fieldName="question"
+          error={errors.question}
+          DynamicTag={{
+            Tag: "textarea",
+            classes: "userInputBox border-2 border-gray-300 px-2 py-1 rounded",
+            selfClosingTag: false,
+            rows: 6,
+            type: "",
+          }}
+        />
 
-        <div className="section flex flex-col border-2 border-gray-400 gap-2 p-8 rounded">
-          <div className="font-bold">Tags</div>
-          <div>
-            Add upto 3 tags to describe what your question is about. Add Comma (
-            , ) Seperated tags.
-          </div>
-          {errors.tags && (
-            <div className="text-red-600"> {errors.tags.message} </div>
-          )}
-          <textarea
-            className="userInputBox border-2 border-gray-300 px-2 py-1 rounded"
-            rows={1}
-            name=""
-            id=""
-            {...register("tags")}
-          />
-        </div>
+        <Section_1
+          header="Add a CSV File (Optional)"
+          description="Add a CSV File if your problem requires some CSV specific details."
+          register={register}
+          fieldName="csvFile"
+          error={errors.csvFile}
+          DynamicTag={{
+            Tag: "input",
+            classes: "",
+            selfClosingTag: true,
+            rows: 0,
+            type: "file",
+          }}
+        />
+
+        <Section_1
+          header="Tags"
+          description="Add upto 3 tags to describe what your question is about. Add Comma (,) Seperated tags."
+          register={register}
+          fieldName="tags"
+          error={errors.tags}
+          DynamicTag={{
+            Tag: "textarea",
+            classes: "userInputBox border-2 border-gray-300 px-2 py-1 rounded",
+            selfClosingTag: false,
+            rows: 1,
+            type: "",
+          }}
+        />
 
         <div className="flex justify-between">
           <button
@@ -131,6 +126,7 @@ const AskQuestionPage = () => {
           <button
             className="bg-transparent border-2 border-red-500 text-red-500 px-5 py-1 rounded"
             onClick={resetAll}
+            disabled={isSubmitting}
           >
             Reset
           </button>

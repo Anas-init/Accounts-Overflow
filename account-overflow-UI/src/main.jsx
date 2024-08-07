@@ -10,6 +10,8 @@ import AskQuestionPage from './assets/Component/Pages/AskQuestionPage.jsx';
 import SignIn from './assets/Component/Sign_In_Up/SignIn.jsx';
 import SignUp from './assets/Component/Sign_In_Up/SignUp.jsx';
 import Sidebar from './assets/Component/SideBarColumn/Sidebar.jsx';
+import AnswerPage from './assets/Component/Pages/AnswerPage.jsx';
+import TagAssociatedQuestionsPage from './assets/Component/Pages/TagAssociatedQuestionsPage.jsx';
 
 const router = createBrowserRouter([
   {
@@ -39,7 +41,15 @@ const router = createBrowserRouter([
       {
         path:"/signUp",
         element: <> <Sidebar/> <SignUp/> </>,
-      }
+      },
+      {
+        path:"/answer",
+        element: <> <Sidebar/> <AnswerPage/> </>
+      },
+      {
+        path:"/tags/:tagName",
+        element: <> <Sidebar/> <TagAssociatedQuestionsPage/> </>
+      },
     ]
   },
 

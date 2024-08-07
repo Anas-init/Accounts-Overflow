@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
+import axios from "../Axios/axios";
 
 const InputSection = (
   { type, placeHolder, Icon, register, name, error }
@@ -18,7 +19,7 @@ const InputSection = (
           type={type}
           placeholder={placeHolder}
           {...register(name)}
-          autoComplete="off"
+          // autoComplete="off"
         />
         <Icon />
       </div>
@@ -33,10 +34,8 @@ const InputSection = (
 
 const SignUp = () => {
 
-  // const firstInput = useRef();
-
   const schema = yup.object().shape({
-    username: yup
+    name: yup
       .string()
       .matches(
         /[A-Z a-z]+_[0-9]+/,
@@ -51,7 +50,7 @@ const SignUp = () => {
       .string()
       .min(8, "Password Length must be greater than 7")
       .required("Password is a required field"),
-    confirmPassword: yup
+    password2: yup
       .string()
       .oneOf([yup.ref("password"), null], "Password must match")
       .required("Confirm Password is a required field"),
@@ -68,8 +67,20 @@ const SignUp = () => {
   const navigate = useNavigate();
   
   const verfiyAndRegister = (data) => {
-    navigate("/signIn");
+
     console.log(data);
+
+    
+    axios.post('/register/', data)
+    .then((response) => {
+      console.log(response); // store access, refresh token;
+    })
+    .catch((error) => {
+      console.log(error);
+    });    
+
+    navigate("/");
+
   };
 
   return (
@@ -85,8 +96,8 @@ const SignUp = () => {
           placeHolder="Username"
           Icon={FaUserAlt}
           register={register}
-          name="username"
-          error={errors.username}
+          name="name"
+          error={errors.name}
         />
         <InputSection
           type="email"
@@ -109,8 +120,8 @@ const SignUp = () => {
           placeHolder="Confirm Password"
           Icon={FaLock}
           register={register}
-          name="confirmPassword"
-          error={errors.confirmPassword}
+          name="password2"
+          error={errors.password2}
         />
 
         <button
