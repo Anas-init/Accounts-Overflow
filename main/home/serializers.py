@@ -135,14 +135,21 @@ class QuestionSerializer(serializers.ModelSerializer):
     request=self.context.get('request')
     validated_data['user']=request.user
     return super().create(validated_data)    
-  
+class AnswerCountSerializer(serializers.ModelSerializer):
+  class Meta:
+    model=Answers
+    
 class QuestionRecordSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email', read_only=True)
     name = serializers.CharField(source='user.name', read_only=True)
+    answers_count=serializers.SerializerMethodField()
+    
     class Meta:
         model = Questions
-        fields = ['email', 'name', 'question_text', 'tags','que_csv_file']
-  
+        fields = ['email', 'name','id', 'question_text', 'tags','que_csv_file','answers_count']
+    def get_answers_count(self,obj):
+      results=Answers.objects.filter(question=obj)
+      return results.count()
     
 class AnswerSerializer(serializers.ModelSerializer):
   ans_csv_file=serializers.FileField(validators=[validate_file_size])
