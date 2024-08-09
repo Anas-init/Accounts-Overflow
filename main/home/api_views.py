@@ -4,11 +4,10 @@ from rest_framework import status
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from home.renderers import BaseRenderer
-from .serializers import UserRegisterSerializer,UserLoginSerializer,UserProfileSerializer,UserChangePasswordSerializer,SendResetEmailSerializer,UserPasswordResetViewSerializer,QuestionSerializer,QuestionRecordSerializer,AnswerSerializer,AnswerRecordSerializer
+from .serializers import UserRegisterSerializer,UserLoginSerializer,UserProfileSerializer,UserChangePasswordSerializer,SendResetEmailSerializer,UserPasswordResetViewSerializer,QuestionSerializer,QuestionRecordSerializer,AnswerSerializer,AnswerRecordSerializer,TagsViewSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from home.models import Questions,Answers
-from rest_framework.pagination import PageNumberPagination
 from math import ceil
 from rest_framework import filters
 from django.conf import settings
@@ -16,6 +15,7 @@ import jwt
 import datetime
 import uuid
 from rapidfuzz import process,fuzz
+
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -45,10 +45,6 @@ class GenerateAccessToken(APIView):
         }
         new_access_token = jwt.encode(new_access_token_payload, settings.SECRET_KEY, algorithm='HS256')
         return Response({'access_token': new_access_token}, status=status.HTTP_200_OK)
-    
-class CustomPaginator(PageNumberPagination):
-    page_size = 10
-    page_query_param = "page"
 
 
 class UserregistrationView(APIView):
@@ -120,24 +116,20 @@ class QuestionView(APIView):
             return Response({'msg':'Question posted successfully'},status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-        
     def get(self, request,format=None):
-        paginator=CustomPaginator()
-        all_questions =Questions.objects.get_queryset().order_by('id')
-        paginated_query=paginator.paginate_queryset(all_questions,request)
-        page_size=paginator.get_page_size(request)
-        total_count=all_questions.count()
-        total_pages = ceil(total_count / page_size)
-        current_page = int(request.query_params.get("page", 1))
-        serializer=QuestionRecordSerializer(paginated_query,many=True)
+        data=[]
+        temp_list=[]
+        all_questions =Questions.objects.all()
+        serializer=QuestionRecordSerializer(all_questions,many=True)
+        for count,all in enumerate(serializer.data):
+            temp_list.append(all)
+            if (count+1)%10==0:
+                data.append(temp_list)
+                temp_list=[]
+        if len(temp_list)!=0:
+            data.append(temp_list)
         return Response({
-            "count": total_count,
-            "next": paginator.get_next_link(),
-            "current_page": current_page,
-            "previous": paginator.get_previous_link(),
-            "first_page": 1,
-            "last_page": total_pages,
-            "results": serializer.data,
+            "results": data,
         },status=status.HTTP_200_OK)
 class AnswerView( APIView):
     renderer_classes = [BaseRenderer]
@@ -155,7 +147,9 @@ class AnswerView( APIView):
         try:
             question = Questions.objects.get(id=question_id)
             serializer = AnswerRecordSerializer(question)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            if request.user and request.user.name == serializer.data['user']['name']:
+                return Response({'data': serializer.data,'flag': False},status=status.HTTP_200_OK)
+            return Response({'data':serializer.data,'flag':True}, status=status.HTTP_200_OK)
         except Questions.DoesNotExist:
             return Response({"error": "Question record not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -193,6 +187,15 @@ class TagsView(APIView):
             queryset = backend().filter_queryset(request, queryset, self)
         serializer=QuestionRecordSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-        
-        
+    
+class TagsRecordView(APIView):
+    def get(self, request,format=None):
+        real_data=[]
+        strip_values='"\'\n\''
+        queryset=Questions.objects.values_list('tags')
+        data=queryset.values('tags')
+        for item in data:
+            split_values=item['tags'].split(',')
+            cleaned_values = [value.strip().strip(strip_values) for value in split_values]
+            real_data.append(cleaned_values)
+        return Response(real_data, status=status.HTTP_200_OK)

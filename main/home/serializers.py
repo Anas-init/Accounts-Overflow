@@ -5,6 +5,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from .utils import Utils
 
+
     
 class UserRegisterSerializer(serializers.ModelSerializer):
   # We are writing this becoz we need confirm password field in our Registration Request
@@ -121,7 +122,7 @@ def validate_file_size(value):
 
 class QuestionSerializer(serializers.ModelSerializer):
   tags=serializers.CharField(max_length=100,validators=[check_tags])
-  que_csv_file=serializers.FileField(validators=[validate_file_size])
+  que_csv_file=serializers.FileField(validators=[validate_file_size],required=False)
   class Meta:
     model=Questions
     fields='__all__'
@@ -152,7 +153,7 @@ class QuestionRecordSerializer(serializers.ModelSerializer):
       return results.count()
     
 class AnswerSerializer(serializers.ModelSerializer):
-  ans_csv_file=serializers.FileField(validators=[validate_file_size])
+  ans_csv_file=serializers.FileField(validators=[validate_file_size],required=False)
   class Meta:
     model=Answers
     fields='__all__'
@@ -177,3 +178,8 @@ class AnswerRecordSerializer(serializers.ModelSerializer):
   def get_answers(self,obj):
       answers=Answers.objects.filter(question=obj)
       return AnswerInfoSerializer(answers,many=True).data
+    
+class TagsViewSerializer(serializers.ModelSerializer):
+  class Meta:
+    model=Questions
+    fields=['tags']
