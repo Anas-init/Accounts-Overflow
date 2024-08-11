@@ -1,5 +1,5 @@
 from django.urls import path,include
-from .api_views import UserregistrationView,UserLogin,UserProfileView,UserChangePasswordView,UserResetSendEmailView,UserPasswordResetView,QuestionView,AnswerView,SearchView,GenerateAccessToken,TagsView
+from .api_views import UserregistrationView,UserLogin,UserProfileView,UserChangePasswordView,UserResetSendEmailView,UserPasswordResetView,QuestionView,AnswerView,SearchView,GenerateAccessToken,TagsView,TagsRecordView
 app_name="home"
 urlpatterns = [
     #User APIs
@@ -24,5 +24,5 @@ urlpatterns = [
 
     #TAGS APIS
     path('tags/',TagsView.as_view(),name='tag-questions'),
-
+    path('alltags/',TagsRecordView.as_view(),name='tag-all-tags'),
 ]
