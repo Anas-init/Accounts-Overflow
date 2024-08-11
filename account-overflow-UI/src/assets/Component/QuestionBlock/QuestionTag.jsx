@@ -5,12 +5,14 @@ import { NavLink } from 'react-router-dom'
 const QuestionTag = ({
     ques = "", 
     tags = "",
-    name =""
+    name ="",
+    answers_count,
 }) => {
 
   const [Question, setQuestion] = useState(ques.replace(/["]/g, ''));
   const [Tags, setTags] = useState(tags.replace(/["]/g, '').split(','));
   const [username, setUsername] = useState(name);
+  const [answer_count, setAnswer_count] = useState(answers_count);
 
   return (
     <div className='w-full flex border-t-2 border-t-gray-300 py-3'>
@@ -18,7 +20,7 @@ const QuestionTag = ({
         <div className='w-32 p-2 flex flex-col gap-1 justify-center'>
             {/* <span className='font-semibold'>Views: 0</span>
             <span className='font-semibold'>Votes: 0</span> */}
-            <span className='font-semibold'>Answers: 0</span>
+            <span className='font-semibold'>Answers: {answer_count}</span>
         </div>
 
         <div className='w-full flex flex-col'>
@@ -33,9 +35,9 @@ const QuestionTag = ({
                 <span className='font-semibold'>Tags:</span>
                 
                 {
-                    Tags.map((tag) => {
+                    Tags.map((tag, index) => {
                         return (
-                            <Tag tagName={tag} />
+                            <Tag key={index} tagName={tag} />
                         )
                     })
                 }

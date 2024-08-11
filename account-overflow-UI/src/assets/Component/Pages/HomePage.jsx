@@ -16,6 +16,7 @@ const Home = () => {
       .get("/allquestion/")
       .then((response) => {
         setTopQuestions(response.data.results);
+        console.log(response.data.results);
       })
       .catch((error) => console.log(error));
   }, []);
@@ -25,14 +26,16 @@ const Home = () => {
       <div className="h-max w-[58%] max-[980px]:w-full  scrollbar-track-orange-600">
         <Header heading="Top Questions" route="/ask" btnText="Ask Question" />
 
-        {topQuestions.map((question, index) => (
+        {topQuestions.map((question) => (
           <QuestionTag
-            key={index}
+            key={question.id}
             ques={question.question_text}
             tags={question.tags}
             name={question.name}
+            answers_count={question.answers_count}
           />
         ))}
+
       </div>
 
       <div className="border-2 border-cyan-800 max-[980px]:hidden">
