@@ -7,14 +7,43 @@ from home.renderers import BaseRenderer
 from .serializers import UserRegisterSerializer,UserLoginSerializer,UserProfileSerializer,UserChangePasswordSerializer,SendResetEmailSerializer,UserPasswordResetViewSerializer,QuestionSerializer,QuestionRecordSerializer,AnswerSerializer,AnswerRecordSerializer,TagsViewSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Count
 from home.models import Questions,Answers
 from math import ceil
 from rest_framework import filters
 from django.conf import settings
 import jwt
-import datetime
+import datetime,time
 import uuid
 from rapidfuzz import process,fuzz
+import google.generativeai as genai
+from env.credentials import API_KEY
+from django.db.models.functions import Cast
+from django.contrib.postgres.fields import ArrayField
+from django.db.models import TextField
+from collections import defaultdict
+genai.configure(api_key=API_KEY)
+
+
+def generate_descriptions(paragraph):
+    prompt = f"""
+    You are given a paragraph that contains multiple topics separated by commas. Your task is to provide a one-line description for each topic. The format should be:
+
+    Format:
+    topic name: description
+
+    Here is the paragraph:
+    "{paragraph}"
+
+    Now, please provide the one-line descriptions for each topic.
+    Example:
+    if the topics are machine learning etc. your response should be like this:
+    
+    - machine learning: A field of AI that enables computers to learn from data and improve performance over time without being explicitly programmed.
+    - deep learning: A subset of machine learning involving neural networks with many layers, used for complex tasks like image and speech recognition. 
+    - data science: An interdisciplinary field that uses statistical methods, algorithms, and systems to extract insights from data.
+    """
+    return prompt
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -147,8 +176,6 @@ class AnswerView( APIView):
         try:
             question = Questions.objects.get(id=question_id)
             serializer = AnswerRecordSerializer(question)
-            if request.user and request.user.name == serializer.data['user']['name']:
-                return Response({'data': serializer.data,'flag': False},status=status.HTTP_200_OK)
             return Response({'data':serializer.data,'flag':True}, status=status.HTTP_200_OK)
         except Questions.DoesNotExist:
             return Response({"error": "Question record not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -187,15 +214,45 @@ class TagsView(APIView):
             queryset = backend().filter_queryset(request, queryset, self)
         serializer=QuestionRecordSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
 class TagsRecordView(APIView):
-    def get(self, request,format=None):
-        real_data=[]
-        strip_values='"\'\n\''
-        queryset=Questions.objects.values_list('tags')
-        data=queryset.values('tags')
-        for item in data:
-            split_values=item['tags'].split(',')
+    def get(self, request, format=None):
+        model = genai.GenerativeModel('gemini-1.0-pro-latest')
+        strip_values = '"\'\n\''
+        queryset = Questions.objects.values_list('tags', flat=True)
+        alltags = ""
+        real_data = []
+        
+        for item in queryset:
+            split_values = item.split(',')
             cleaned_values = [value.strip().strip(strip_values) for value in split_values]
-            real_data.append(cleaned_values)
-        return Response(real_data, status=status.HTTP_200_OK)
+            for value in cleaned_values:
+                alltags += value + ','
+            real_data.extend(cleaned_values)
+        
+        alltags = alltags.rstrip(',')  
+
+        response = model.generate_content(generate_descriptions(alltags))
+        response_text = response.text
+
+        lines = response_text.strip().split('\n')
+        result_dict = {}
+        for line in lines:
+            key, value = line.split(': ', 1)
+            result_dict[key.strip()] = value.strip()
+        tag_counts = defaultdict(int)
+        for item in queryset:
+            tags = [tag.strip().strip(strip_values) for tag in item.split(',')]
+            for tag in tags:
+                tag_counts[tag] += 1
+    
+        final_data = []
+        for tag in tag_counts:
+            hyphen_space_tag="- "
+            hyphen_space_tag+=tag
+            final_data.append({
+                'tag': tag,
+                'count': tag_counts[tag],
+                'description': result_dict.get(hyphen_space_tag)
+            })
+        
+        return Response({'tags': final_data}, status=status.HTTP_200_OK)
