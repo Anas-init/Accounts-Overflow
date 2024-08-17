@@ -100,29 +100,10 @@ class UserPasswordResetViewSerializer(serializers.Serializer):
       PasswordResetTokenGenerator().check_token(user,token)
       raise serializers.ValidationError("Token is invalid")
     
-    
-def check_tags(value):
-  count=0
-  for i in value:
-    if i==',':
-      count+=1
-  if count<1 or count>1:
-    raise serializers.ValidationError("Tags must be 2 ") 
-  else:
-    return value
-  
-  
-def validate_file_size(value):
-    filesize = value.size
-    if filesize > 5242880:  # 5MB in bytes
-        raise serializers.ValidationError("The maximum file size that can be uploaded is 5MB")
-    else:
-        return value
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-  tags=serializers.CharField(max_length=100,validators=[check_tags])
-  que_csv_file=serializers.FileField(validators=[validate_file_size],required=False)
+  que_csv_file=serializers.FileField(required=False)
   class Meta:
     model=Questions
     fields='__all__'
@@ -135,10 +116,15 @@ class QuestionSerializer(serializers.ModelSerializer):
   def create(self,validated_data):
     request=self.context.get('request')
     validated_data['user']=request.user
-    return super().create(validated_data)    
-class AnswerCountSerializer(serializers.ModelSerializer):
-  class Meta:
-    model=Answers
+    return super().create(validated_data)
+  def update(self, instance, validated_data):
+    instance.que_csv_file=validated_data.get('que_csv_file',instance.que_csv_file)
+    instance.question_text=validated_data.get('question_text',instance.question_text)
+    instance.tags=validated_data.get('tags',instance.tags)
+    instance.save()
+    return instance
+  
+
     
 class QuestionRecordSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email', read_only=True)
@@ -153,7 +139,7 @@ class QuestionRecordSerializer(serializers.ModelSerializer):
       return results.count()
     
 class AnswerSerializer(serializers.ModelSerializer):
-  ans_csv_file=serializers.FileField(validators=[validate_file_size],required=False)
+  ans_csv_file=serializers.FileField(required=False)
   class Meta:
     model=Answers
     fields='__all__'
@@ -169,6 +155,7 @@ class AnswerInfoSerializer(serializers.ModelSerializer):
   class Meta:
     model=Answers
     fields=['user', 'answer_text','total_views','votes','ans_csv_file']
+    
 class AnswerRecordSerializer(serializers.ModelSerializer):
   user= UserProfileSerializer(read_only=True)
   answers=serializers.SerializerMethodField()
