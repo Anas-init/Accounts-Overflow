@@ -1,4 +1,6 @@
 from django.urls import path,include
+from django.conf import settings
+from django.conf.urls.static import static
 from .api_views import UserregistrationView,UserLogin,UserProfileView,UserChangePasswordView,UserResetSendEmailView,UserPasswordResetView,QuestionView,AnswerView,SearchView,GenerateAccessToken,TagsView,TagsRecordView
 app_name="home"
 urlpatterns = [
@@ -13,7 +15,9 @@ urlpatterns = [
     
     #Question APIs
     path('allquestion/',QuestionView.as_view(),name='all-question'),
-    path('question/',QuestionView.as_view(),name='create-question'),
+    path('question/',QuestionView.as_view(),name='questions-list'),
+    path('update-question/',QuestionView.as_view(),name='update-question'),
+    
     
     #ANSWER APIs
     path('allanswer/',AnswerView.as_view(),name='all-answer'),
@@ -25,4 +29,6 @@ urlpatterns = [
     #TAGS APIS
     path('tags/',TagsView.as_view(),name='tag-questions'),
     path('alltags/',TagsRecordView.as_view(),name='tag-all-tags'),
-]
+    
+    
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

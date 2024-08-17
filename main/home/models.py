@@ -59,7 +59,7 @@ class MyUser(AbstractBaseUser):
         return self.is_admin
 class Questions(models.Model):
     user = models.ForeignKey(MyUser,on_delete=models.CASCADE,blank=True)
-    que_csv_file = models.FileField(blank=True)
+    que_csv_file = models.FileField(upload_to='uploads/',blank=True,null=True)
     question_text=models.TextField()
     tags = models.CharField()
     def __str__(self):
@@ -67,7 +67,7 @@ class Questions(models.Model):
 class Answers(models.Model):
     question=models.ForeignKey(Questions,on_delete=models.CASCADE)
     user=models.ForeignKey(MyUser,on_delete=models.CASCADE)
-    ans_csv_file=models.FileField(blank=True)
+    ans_csv_file=models.FileField(upload_to='uploads/',blank=True,null=True)
     answer_text=models.TextField()
     votes=models.IntegerField()
     total_views=models.IntegerField()

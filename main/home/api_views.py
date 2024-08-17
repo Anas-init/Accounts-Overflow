@@ -12,7 +12,7 @@ from home.models import Questions,Answers
 from math import ceil
 from rest_framework import filters
 from django.conf import settings
-import jwt
+import jwt,os
 import datetime,time
 import uuid
 from rapidfuzz import process,fuzz
@@ -22,6 +22,8 @@ from django.db.models.functions import Cast
 from django.contrib.postgres.fields import ArrayField
 from django.db.models import TextField
 from collections import defaultdict
+from rest_framework.parsers import FormParser,MultiPartParser
+from django.http import FileResponse,HttpResponse
 genai.configure(api_key=API_KEY)
 
 
@@ -138,6 +140,7 @@ class UserPasswordResetView(APIView):
         
 class QuestionView(APIView):
     renderer_classes=[BaseRenderer]
+    parser_classes=[FormParser,MultiPartParser]
     def post(self, request,format=None):
         serializer=QuestionSerializer(data=request.data,context={'request':request})
         if serializer.is_valid(raise_exception=True):
@@ -145,21 +148,49 @@ class QuestionView(APIView):
             return Response({'msg':'Question posted successfully'},status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-    def get(self, request,format=None):
-        data=[]
-        temp_list=[]
-        all_questions =Questions.objects.all()
-        serializer=QuestionRecordSerializer(all_questions,many=True)
-        for count,all in enumerate(serializer.data):
+    def get(self, request, format=None):
+        question_id = request.query_params.get('question_id')
+        download_csv = request.query_params.get('download_csv', 'false').lower() == 'true'
+
+        if question_id:
+            try:
+                question = Questions.objects.get(pk=question_id)
+
+                if download_csv:
+                    file_path = os.path.join(settings.MEDIA_ROOT, question.que_csv_file.name)
+
+                    if os.path.exists(file_path):
+                        response = HttpResponse(question.que_csv_file, content_type='text/csv')
+                        response['Content-Disposition'] = f'attachment; filename="{question.que_csv_file.name}"'
+                        return response
+                    else:
+                        raise Response({'msg':"File not found"},status=status.HTTP_400_BAD_REQUEST)
+            except Questions.DoesNotExist:
+                return Response({"error": "Question not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Paginated data retrieval
+        data = []
+        temp_list = []
+        all_questions = Questions.objects.all().order_by('id')
+        serializer = QuestionRecordSerializer(all_questions, many=True)
+        for count, all in enumerate(serializer.data):
             temp_list.append(all)
-            if (count+1)%10==0:
+            if (count + 1) % 10 == 0:
                 data.append(temp_list)
-                temp_list=[]
-        if len(temp_list)!=0:
+                temp_list = []
+        if len(temp_list) != 0:
             data.append(temp_list)
+
         return Response({
             "results": data,
-        },status=status.HTTP_200_OK)
+        }, status=status.HTTP_200_OK)
+    def put(self, request,format=None):
+        question_id=request.query_params.get('id')
+        question_obj=Questions.objects.get(id=question_id)
+        serializer=QuestionSerializer(question_obj,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        return Response({'msg': 'Question updated successfully'},status=status.HTTP_200_OK)        
 class AnswerView( APIView):
     renderer_classes = [BaseRenderer]
     def post(self,request,format=None):
@@ -171,12 +202,27 @@ class AnswerView( APIView):
             return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     def get(self,request,format=None):
         question_id = request.query_params.get("id")
+        download_csv=request.query_params.get("download_csv",'false').lower()=='true'
+        answer_id=request.query_params.get("answer_id")
+        if answer_id:
+            try:
+                answer=Answers.objects.get(id=answer_id)
+                if download_csv:
+                    file_path = os.path.join(settings.MEDIA_ROOT, answer.ans_csv_file.name)
+                    if os.path.exists(file_path):
+                        response = HttpResponse(answer.ans_csv_file, content_type='text/csv')
+                        response['Content-Disposition'] = f'attachment; filename="{answer.ans_csv_file.name}"'
+                        return response
+                    else:
+                        raise Response({'msg':"File not found"},status=status.HTTP_400_BAD_REQUEST)
+            except Answers.DoesNotExist:
+                return Response({"error": "Question not found"}, status=status.HTTP_404_NOT_FOUND)
         if not question_id:
             return Response({"error":'Question id not provided'},status=status.HTTP_400_BAD_REQUEST)
         try:
             question = Questions.objects.get(id=question_id)
             serializer = AnswerRecordSerializer(question)
-            return Response({'data':serializer.data,'flag':True}, status=status.HTTP_200_OK)
+            return Response({'data':serializer.data}, status=status.HTTP_200_OK)
         except Questions.DoesNotExist:
             return Response({"error": "Question record not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -186,7 +232,6 @@ class AnswerView( APIView):
 class SearchView(APIView):
     search_fields = ['$question_text']
     filter_backends = [filters.SearchFilter]
-
     def get(self, request, format=None):
         queryset = Questions.objects.all()
         for backend in list(self.filter_backends):
@@ -203,8 +248,6 @@ class SearchView(APIView):
             return Response({'msg': 'no record matches your query'}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 class TagsView(APIView):
     search_fields = ['$tags']
     filter_backends = [filters.SearchFilter]
