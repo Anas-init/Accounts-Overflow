@@ -1,26 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import Section_1 from "../User Input Sections/Section_1";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useUserCredentials } from "../ZustandStore/user-credentials-store";
-import { FaArrowAltCircleUp } from "react-icons/fa";
+import { FaAllergies, FaArrowAltCircleUp } from "react-icons/fa";
 import { FaArrowAltCircleDown } from "react-icons/fa";
+import { jwtDecode } from "jwt-decode";
+import axios from "../Axios/axios";
 
 const AnswerPage = () => {
   const objectFormat = yup.object().shape({
-    answer: yup
+    answer_text: yup
       .string()
       .required("This is a required field")
       .matches(
         /[A-Z a-z 0-9]{15,}/,
         "Minimum Length criteria must be followed"
       ),
-    csvFile: yup
+    ans_csv_file: yup
       .mixed()
       .test("is-valid-file", "Only CSV Files are acceptable", (value) => {
-        return value[0]?.name.split(".")[1] === "csv" || value.length === 0;
+        return (
+          !value ||
+          value?.length === 0 ||
+          value[0]?.name?.split(".")[1] === "csv"
+        );
       })
       .notRequired(),
   });
@@ -32,38 +38,151 @@ const AnswerPage = () => {
     resolver: yupResolver(objectFormat),
   });
 
-  const [question, setQuestion] = useState(useLocation().state);
-  const { authTokens } = useUserCredentials();
+  const [question, setQuestion] = useState(useLocation().state.question_text);
+  const [questionID, setQuestionID] = useState(useLocation().state.question_id);
+  const { authTokens } = useUserCredentials((state) => ({
+    authTokens: state.authTokens,
+  }));
+  const [questionCSVFile, setQuestionCSVFile] = useState(
+    useLocation().state.que_csv_file
+  );
+  const [allAnswers, setAllAnswers] = useState(null);
+  const [votingStates, setVotingStates] = useState(null);
+  // const [CSV, setCSV] = useState("No CSV File");
+
+  useEffect(() => {
+    console.log("Component mounted!");
+    return () => {
+      console.log("Component Unmounted!");
+    };
+  }, []);
+
+  useMemo(() => {
+    if (allAnswers === null) {
+
+      // const fetchCsvData = async () => {
+      //   try {
+      //     const response = await fetch("API_URL_HERE"); // Replace with your DRF API URL
+      //     const data = await response.blob(); // Get the response as a blob
+      //     const url = URL.createObjectURL(data);
+      //     setCsvUrl(url);
+      //   } catch (error) {
+      //     console.error("Error fetching the CSV data:", error);
+      //   }
+      // }; 
+
+      axios
+        .get(`/allanswer/?id=${questionID}`)
+        .then((response) => {
+          // setCSV(URL.createObjectURL(response.data.ans_csv_file.blob()))
+          setAllAnswers(response.data.data.answers);
+          setVotingStates(
+            response.data.data.answers === null
+              ? []
+              : Array(response.data.data.answers.length)
+                  .fill(0)
+                  .map((item, index) => response.data.data.answers[index].votes)
+          );
+          // console.log(votingStates);
+        })
+        .catch((err) => setAllAnswers(null));
+    }
+
+    // console.log(votingStates);
+    // console.log(allAnswers);
+  }, [allAnswers]);
 
   const submitAnswer = (data) => {
+    data["question"] = questionID;
+    data["votes"] = 0;
+    data["total_views"] = 0;
+    data["user"] = jwtDecode(authTokens.access)["user_id"];
+
     console.log(data);
+
+    const formData = new FormData();
+
+    if (data["ans_csv_file"]?.length == 0) delete data["ans_csv_file"];
+
+    for (const key in data) {
+      if (key === "ans_csv_file" && data[key].length > 0) {
+        formData.append(key, data[key][0]);
+      } else {
+        formData.append(key, data[key]);
+      }
+    }
+
+    // for (const pair of formData.entries()) {
+    //   console.log(`${pair[0]}: ${pair[1]}`);
+    // }
+
+    // axios
+    //   .post("/answer/", formData, {
+    //     headers: {
+    //       "Content-Type": "multipart/form-data",
+    //       Authorization: `Bearer ${authTokens.access}`,
+    //     },
+    //   })
+    //   .then((res) => console.log(res))
+    //   .catch((err) => console.log(err));
+
+    axios
+      .post("/answer/", formData, {
+        headers: {
+          Authorization: `Bearer ${authTokens.access}`, // Let Axios handle the Content-Type
+        },
+      })
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        if (err.response) {
+          console.log("Response error data:", err.response.data);
+          console.log("Response status:", err.response.status);
+          console.log("Response headers:", err.response.headers);
+        } else if (err.request) {
+          console.log("Request error:", err.request);
+        } else {
+          console.log("Error:", err.message);
+        }
+      });
   };
 
-  const PostedAnswerSection = () => {
+  const PostedAnswerSection = ({
+    votes = 0,
+    ans_csv_file = "",
+    answer_text = "",
+    username = "",
+    upVotingFunction,
+    downVotingFunction,
+  }) => {
+    console.log(ans_csv_file);
     return (
       <div className="flex gap-2 p-3 border-2 border-gray-400 border-dashed rounded">
         <div className="flex flex-col items-center justify-center gap-5">
-          <FaArrowAltCircleUp className="h-10 w-10 hover:cursor-pointer" />
-          <div> 2347 </div>
-          <FaArrowAltCircleDown className="h-10 w-10 hover:cursor-pointer" />
+          <FaArrowAltCircleUp
+            onClick={upVotingFunction}
+            className="h-10 w-10 hover:cursor-pointer"
+          />
+          <div> {votes} </div>
+          <FaArrowAltCircleDown
+            onClick={downVotingFunction}
+            className="h-10 w-10 hover:cursor-pointer"
+          />
         </div>
 
         <div className="flex flex-col gap-2 p-3">
           <div>
             {" "}
-            <span className="font-bold"> Username: </span> ahsan_27617{" "}
+            <span className="font-bold"> Username: </span> {username}{" "}
           </div>
           <div>
             {" "}
-            <span className="font-bold"> Posted Answer: </span> Lorem ipsum
-            dolor sit amet consectetur adipisicing elit. Porro mollitia, nam
-            eligendi omnis quaerat earum ducimus reprehenderit vero? Alias,
-            assumenda? Lorem ipsum dolor sit amecipit deserunt omnis sit nulla
-            perferendis necessitatibus in. Ipsum?{" "}
+            <span className="font-bold"> Posted Answer: </span> {answer_text}
           </div>
           <div>
             {" "}
-            <span className="font-bold"> CSV File: </span> No File{" "}
+            <span className="font-bold"> CSV File: </span> <a href={ans_csv_file} download={ans_csv_file}>{ans_csv_file}</a>
           </div>
           <div>
             {" "}
@@ -76,7 +195,7 @@ const AnswerPage = () => {
   };
 
   return (
-    <div className="max-[980px]:w-full max-[600px]:left-0 max-[600px]:z-10 flex flex-col gap-2 w-[84.5%] h-max relative left-52 overflow-x-hidden top-[3.95rem] max-[600px]:top-[5.3rem] p-3 pt-10">
+    <div className="max-[980px]:w-full max-[600px]:left-0 max-[600px]:z-10 flex flex-col gap-2 w-[93%] h-max relative left-24 overflow-x-hidden top-[3.95rem] max-[600px]:top-[5.3rem] p-3 pt-10">
       <div className="flex flex-col gap-2">
         <div>
           <span className="text-2xl font-bold mr-2">Question:</span>
@@ -85,7 +204,7 @@ const AnswerPage = () => {
 
         <div>
           <span className="text-2xl font-bold mr-2">CSV File:</span>
-          <span className="text-lg">No File</span>
+          <span className="text-lg">{questionCSVFile}</span>
         </div>
       </div>
 
@@ -98,8 +217,8 @@ const AnswerPage = () => {
           description="Write a precise description of your answer. Minimum 15 English
             characters."
           register={register}
-          fieldName="answer"
-          error={errors.answer}
+          fieldName="answer_text"
+          error={errors.answer_text}
           DynamicTag={{
             Tag: "textarea",
             classes: "userInputBox border-2 border-gray-300 px-2 py-1 rounded",
@@ -113,8 +232,8 @@ const AnswerPage = () => {
           header="Add a CSV File (Optional)"
           description="Add a CSV File if your answer requires some CSV specific details."
           register={register}
-          fieldName="csvFile"
-          error={errors.csvFile}
+          fieldName="ans_csv_file"
+          error={errors.ans_csv_file}
           DynamicTag={{
             Tag: "input",
             classes: "",
@@ -127,14 +246,14 @@ const AnswerPage = () => {
         {authTokens == null ? (
           <NavLink
             to={"/signIn"}
-            className="bg-blue-500 border-2 border-blue-500 text-white text-center px-5 py-1 rounded"
+            className="bg-blue-500 border-2 border-blue-500 text-white text-center px-5 py-1 rounded transition-all hover:scale-[1.01]"
           >
             Post My Answer
           </NavLink>
         ) : (
           <button
             type="submit"
-            className="bg-blue-500 border-2 border-blue-500 text-white text-center px-5 py-1 rounded"
+            className="bg-blue-500 border-2 border-blue-500 text-white text-center px-5 py-1 rounded transition-all hover:scale-[1.01]"
             onClick={submitAnswer}
             disabled={isSubmitting}
           >
@@ -146,12 +265,43 @@ const AnswerPage = () => {
       <div className="flex flex-col gap-3">
         <h1 className="text-2xl font-bold">Answers Posted By Other Users: </h1>
         <div className="h-[40rem] flex flex-col gap-4 border-2 border-gray-400 rounded p-4 overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-          <PostedAnswerSection />
-          <PostedAnswerSection />
-          <PostedAnswerSection />
-          <PostedAnswerSection />
-          <PostedAnswerSection />
-          <PostedAnswerSection />
+          {allAnswers != null &&
+            votingStates != null &&
+            allAnswers?.map((ans, index) => {
+              return (
+                <PostedAnswerSection
+                  key={index}
+                  votes={votingStates[index]}
+                  ans_csv_file={ ans.ans_csv_file == null ? "No CSV File" : URL.createObjectURL(new Blob([ans.ans_csv_file]))}
+                  answer_text={ans.answer_text}
+                  username={ans.user.name}
+                  upVotingFunction={() => {
+                    if (votingStates[index] < ans.votes + 1)
+                      setVotingStates(
+                        Array(votingStates.length)
+                          .fill(0)
+                          .map((item, i) => {
+                            console.log("upvoting clicked");
+                            if (index == i) return votingStates[i] + 1;
+                            return votingStates[i];
+                          })
+                      );
+                  }}
+                  downVotingFunction={() => {
+                    if (votingStates[index] > ans.votes - 1)
+                      setVotingStates(
+                        Array(votingStates.length)
+                          .fill(0)
+                          .map((item, i) => {
+                            console.log("downvoting clicked");
+                            if (index == i) return votingStates[i] - 1;
+                            return votingStates[i];
+                          })
+                      );
+                  }}
+                />
+              );
+            })}
         </div>
       </div>
     </div>
