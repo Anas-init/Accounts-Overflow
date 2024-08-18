@@ -4,81 +4,83 @@ import Header from "../PageHeaders/Header.jsx";
 import Button_1 from "../Buttons/Button_1";
 import { useEffect, useState } from "react";
 import axios from "../Axios/axios.js";
+import { useAllQuestionStore } from "../ZustandStore/all-questions-store.js";
 
 const QuestionPage = () => {
-  const [allQuestions, setAllQuestions] = useState([]);
-  const [pagenationState, setPagenationState] = useState([]);
-  const [changePage, setChangePage] = useState(1);
-  const [disableButton, setDisableButton] = useState(false);
-
   useEffect(() => {
     window.scrollTo(top);
   }, []);
 
-  const updatePage = () => {
+  const { allQuestions, setAllQuestions, allQuestionPageRenderingArray  } = useAllQuestionStore((state) => ({
+    allQuestions: state.allQuestions,
+    setAllQuestions: state.setAllQuestions,
+    allQuestionPageRenderingArray: state.allQuestionPageRenderingArray,
+  }));
+  const [currentPage, setCurrentPage] = useState(0);
 
-    let pageNumber = document.getElementById("customPage").value;
-    if(pageNumber < 1 || pageNumber > pagenationState.last_page || pageNumber == pagenationState.current_page) return;
-    setChangePage(pageNumber);
-    document.getElementById("customPage").value = "";
+  useMemo(() => {
+    if (allQuestionPageRenderingArray == null) setAllQuestions();
+  }, [allQuestionPageRenderingArray]);
 
-  };
-
-  const newPages = async () => {
-    if (changePage == pagenationState.current_page) return;
-
-    const response = await axios
-      .get(`/allquestion/?page=${changePage}`)
-      .then((response) => {
-        setAllQuestions(response.data.results);
-        setPagenationState(response.data);
-      })
-      .catch((error) => console.log(error));
-
-    setDisableButton(false);
-  };
-
-  useMemo(newPages, [changePage]);
+  // console.log(allQuestionPageRenderingArray);
 
   return (
-    <div className="max-[980px]:w-full max-[600px]:left-0 max-[600px]:z-10 flex w-[84.%] h-max relative left-52 overflow-x-hidden overflow-y-scroll top-[3.95rem] max-[600px]:top-[5.3rem]">
+    // left-52
+    <div className="max-[980px]:w-full max-[600px]:left-0 max-[600px]:z-10 flex w-[94%] h-max relative left-24 overflow-x-hidden overflow-y-scroll top-[3.95rem] max-[600px]:top-[5.3rem]">
       <div className="h-max w-[58%] max-[980px]:w-full  scrollbar-track-orange-600">
         <Header heading="All Questions" route="/ask" btnText="Ask Question" />
 
-        {allQuestions.map((question) => (
-          <QuestionTag
-            key={question.id}
-            ques={question.question_text}
-            tags={question.tags}
-            name={question.name}
-            answers_count={question.answers_count}
-          />
-        ))}
+        {allQuestions == null ? (
+          <div className="flex w-full mb-20 justify-center items-center">
+            <div
+              className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-e-transparent align-[-0.125em] text-surface motion-reduce:animate-[spin_1.5s_linear_infinite] dark:text-white"
+              role="status"
+            >
+              <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+                Loading...
+              </span>
+            </div>
+          </div>
+        ) : (
+          <>
+            {allQuestionPageRenderingArray[currentPage]?.map((question) => {
+              return (
+                <QuestionTag
+                  key={question.id}
+                  ques={question.question_text}
+                  tags={question.tags}
+                  name={question.name}
+                  answers_count={question.answers_count}
+                  ques_id={question.id}
+                  que_csv_file={
+                    question.que_csv_file == null
+                      ? "No CSV File"
+                      : question.que_csv_file
+                  }
+                />
+              );
+            })}
+          </>
+        )}
 
         {/* Pagenation */}
-        <div className="flex flex-col border-t-2 border-t-gray-300 justify-center items-center gap-3 p-5">
+        <div className="flex flex-col border-t-2 border-b-2 border-t-gray-300 justify-center items-center gap-3 p-5 pb-8">
           <div className="flex flex-wrap justify-around p-2 w-[100%]">
             <Button_1
               runFunction={() => {
-                if (disableButton == true || changePage <= 1) return;
-
-                setDisableButton(true);
-                setChangePage(changePage - 1);
-                // console.log("changeButton State: ", changePage);
+                if (allQuestionPageRenderingArray == null || currentPage <= 0) return;
+                setCurrentPage(currentPage - 1);
               }}
               buttonName="Previous Page"
             />
             <Button_1
               runFunction={() => {
                 if (
-                  disableButton == true ||
-                  changePage >= pagenationState.last_page
+                  allQuestionPageRenderingArray == null ||
+                  currentPage >= allQuestionPageRenderingArray.length - 1
                 )
                   return;
-
-                setDisableButton(true);
-                setChangePage(changePage + 1);
-                // console.log("changeButton State: ", changePage);
+                setCurrentPage(currentPage + 1);
               }}
               buttonName="Next Page"
             />
@@ -87,9 +89,9 @@ const QuestionPage = () => {
           <div className="flex flex-col justify-center w-100%">
             <div className="text-red-400">
               {" "}
-              Total Pages Count:{" "}
+              Total Pages Count:
               <span className="text-red-900 font-extrabold ml-1">
-                {pagenationState.last_page}
+                {allQuestionPageRenderingArray == null ? 0 : allQuestionPageRenderingArray.length}
               </span>
             </div>
 
@@ -100,7 +102,24 @@ const QuestionPage = () => {
                 type="text"
                 placeholder="Enter a Custom Page . . ."
               />
-              <button onClick={updatePage} className="border-0 bg-blue-500 text-white p-1 px-3 rounded-sm ml-2">Go</button>
+              <button
+                className="border-0 bg-blue-500 text-white p-1 px-3 rounded-sm ml-2 transition-all hover:scale-105"
+                onClick={(event) => {
+                  const customPage = document.getElementById("customPage");
+                  if (
+                    allQuestionPageRenderingArray == null ||
+                    customPage.value > allQuestionPageRenderingArray.length ||
+                    customPage < 1 ||
+                    currentPage == customPage.value - 1
+                  )
+                    return;
+
+                  setCurrentPage(customPage.value - 1);
+                  customPage.value = "";
+                }}
+              >
+                Go
+              </button>
             </div>
           </div>
         </div>

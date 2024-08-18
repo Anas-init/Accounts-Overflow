@@ -39,7 +39,7 @@ const SignIn = () => {
 
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const {setAuthTokens} = useUserCredentials();
+  const {setAuthTokens} = useUserCredentials(state => ({setAuthTokens: state.setAuthTokens}));
 
   const {
     register,
@@ -75,6 +75,7 @@ const SignIn = () => {
     axios
       .post("/login/", data)
       .then((response) => {
+        console.log(response);
         setAuthTokens(response.data.token);
         setError('');
         window.localStorage.setItem("token", JSON.stringify(response.data.token));
@@ -87,7 +88,7 @@ const SignIn = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-max relative left-52 w-[85%] max-[600px]:left-0 max-[600px]:w-full z-0 top-[3.95rem] pt-10 max-[600px]:px-3">
+    <div className="flex flex-col items-center justify-center h-max relative left-24 w-[85%] max-[600px]:left-0 max-[600px]:w-full z-0 top-[3.95rem] pt-10 max-[600px]:px-3">
       <form
         className="flex flex-col items-center justify-center w-[30rem] max-[600px]:w-full gap-4 bg-gray-200 px-7 py-12 m-3 rounded-lg"
         onSubmit={handleSubmit(verifyAndLogin)}
