@@ -4,11 +4,11 @@ from rest_framework import status
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from home.renderers import BaseRenderer
-from .serializers import UserRegisterSerializer,UserLoginSerializer,UserProfileSerializer,UserChangePasswordSerializer,SendResetEmailSerializer,UserPasswordResetViewSerializer,QuestionSerializer,QuestionRecordSerializer,AnswerSerializer,AnswerRecordSerializer,TagsViewSerializer
+from .serializers import UserRegisterSerializer,UserLoginSerializer,UserProfileSerializer,UserChangePasswordSerializer,SendResetEmailSerializer,UserPasswordResetViewSerializer,QuestionSerializer,QuestionRecordSerializer,AnswerSerializer,AnswerRecordSerializer,TagsViewSerializer,ProfileInfoViewSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count
-from home.models import Questions,Answers
+from home.models import Questions,Answers,MyUser
 from math import ceil
 from rest_framework import filters
 from django.conf import settings
@@ -56,7 +56,7 @@ def get_tokens_for_user(user):
 
 class GenerateAccessToken(APIView):
     def get(self, request, format=None):
-        refresh_token = request.headers.get('token')
+        refresh_token = request.query_params.get('token')
         if not refresh_token:
             return Response({'error': 'Refresh token is required.'}, status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -160,8 +160,10 @@ class QuestionView(APIView):
                     file_path = os.path.join(settings.MEDIA_ROOT, question.que_csv_file.name)
 
                     if os.path.exists(file_path):
-                        response = HttpResponse(question.que_csv_file, content_type='text/csv')
-                        response['Content-Disposition'] = f'attachment; filename="{question.que_csv_file.name}"'
+                        response = HttpResponse(question.que_csv_file, content_type='csv')
+                        response.headers['Content-Disposition'] = f'attachment; filename="{question.que_csv_file.name}"'
+                        response.headers['Access-Control-Allow-Origin'] = '*'
+                        response.headers['Access-Control-Expose-Headers'] = 'Content-Disposition'
                         return response
                     else:
                         raise Response({'msg':"File not found"},status=status.HTTP_400_BAD_REQUEST)
@@ -186,11 +188,22 @@ class QuestionView(APIView):
         }, status=status.HTTP_200_OK)
     def put(self, request,format=None):
         question_id=request.query_params.get('id')
-        question_obj=Questions.objects.get(id=question_id)
-        serializer=QuestionSerializer(question_obj,data=request.data,partial=True)
-        if serializer.is_valid():
-            serializer.save()
-        return Response({'msg': 'Question updated successfully'},status=status.HTTP_200_OK)        
+        if request and not request.user.is_authenticated:
+            return Response({'error': 'User is not authenticated'},status=status.HTTP_401_UNAUTHORIZED)
+        if question_id:
+            try:
+                question=Questions.objects.get(id=question_id)
+                serializer=QuestionSerializer(question,request.data,partial=True)
+                if serializer.is_valid(raise_exception=True):
+                    serializer.save()
+                    return Response({'msg':'Question updated succesfully'},status=status.HTTP_202_ACCEPTED)
+                else:
+                    return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+            except Questions.DoesNotExist:
+                return Response({"error":"Question record not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"error":"Question id is not provided"},status=status.HTTP_404_NOT_FOUND)
+                
 class AnswerView( APIView):
     renderer_classes = [BaseRenderer]
     def post(self,request,format=None):
@@ -211,7 +224,9 @@ class AnswerView( APIView):
                     file_path = os.path.join(settings.MEDIA_ROOT, answer.ans_csv_file.name)
                     if os.path.exists(file_path):
                         response = HttpResponse(answer.ans_csv_file, content_type='text/csv')
-                        response['Content-Disposition'] = f'attachment; filename="{answer.ans_csv_file.name}"'
+                        response.headers['Content-Disposition'] = f'attachment; filename="{answer.ans_csv_file.name}"'
+                        response.headers['Access-Control-Allow-Origin'] = '*'
+                        response.headers['Access-Control-Expose-Headers'] = 'Content-Disposition'
                         return response
                     else:
                         raise Response({'msg':"File not found"},status=status.HTTP_400_BAD_REQUEST)
@@ -227,9 +242,26 @@ class AnswerView( APIView):
             return Response({"error": "Question record not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
+    def put(self, request,format=None):
+        answer_id=request.query_params.get('id')
+        if request and not request.user.is_authenticated:
+            return Response({'error': 'User is not authenticated'},status=status.HTTP_401_UNAUTHORIZED)
+        if answer_id:
+            try:
+                answer=Answers.objects.get(id=answer_id)
+                serializer=AnswerSerializer(answer,request.data,partial=True)
+                if serializer.is_valid(raise_exception=True):
+                    serializer.save()
+                    return Response({'msg':'Answer updated succesfully'},status=status.HTTP_202_ACCEPTED)
+                else:
+                    return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+            except Answers.DoesNotExist:
+                return Response({"error":"Answer record not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"error":"Answer id is not provided"},status=status.HTTP_404_NOT_FOUND)
+            
 class SearchView(APIView):
+    renderer_classes = [BaseRenderer]
     search_fields = ['$question_text']
     filter_backends = [filters.SearchFilter]
     def get(self, request, format=None):
@@ -249,6 +281,7 @@ class SearchView(APIView):
         else:
             return Response(serializer.data, status=status.HTTP_200_OK)
 class TagsView(APIView):
+    renderer_classes = [BaseRenderer]
     search_fields = ['$tags']
     filter_backends = [filters.SearchFilter]
     def get(self, request,format=None):
@@ -258,6 +291,7 @@ class TagsView(APIView):
         serializer=QuestionRecordSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 class TagsRecordView(APIView):
+    renderer_classes = [BaseRenderer]
     def get(self, request, format=None):
         model = genai.GenerativeModel('gemini-1.0-pro-latest')
         strip_values = '"\'\n\''
@@ -299,3 +333,25 @@ class TagsRecordView(APIView):
             })
         
         return Response({'tags': final_data}, status=status.HTTP_200_OK)
+class UserProfileInfoView(APIView):
+    renderer_classes = [BaseRenderer]
+    def get(self, request, format=None):
+        username=request.query_params.get('username')
+        if username is not None:
+            user=MyUser.objects.get(name=username)
+            if user is not None:
+                serializer=ProfileInfoViewSerializer(user)
+                return Response({'data':serializer.data,'flag':False},status=status.HTTP_200_OK)
+            else:
+                return Response({'msg': 'Invalid username'},status=status.HTTP_404_NOT_FOUND)
+        else:
+            if request and not request.user.is_authenticated:
+                return Response({'msg': 'You must be logged in'},status=status.HTTP_401_UNAUTHORIZED)
+            else:
+                serializer=ProfileInfoViewSerializer(request.user)
+                return Response({'data': serializer.data,'flag':True},status=status.HTTP_200_OK)
+                
+                
+            
+            
+        
