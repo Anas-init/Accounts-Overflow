@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useUserCredentials } from "../ZustandStore/user-credentials-store";
-import { FaAllergies, FaArrowAltCircleUp } from "react-icons/fa";
+import { FaArrowAltCircleUp } from "react-icons/fa";
 import { FaArrowAltCircleDown } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
 import axios from "../Axios/axios";
@@ -48,7 +48,9 @@ const AnswerPage = () => {
   );
   const [allAnswers, setAllAnswers] = useState(null);
   const [votingStates, setVotingStates] = useState(null);
-  // const [CSV, setCSV] = useState("No CSV File");
+
+  const [initalAnswerText, setInitalAnswerText] = useState(useLocation().state == null ? "" : useLocation().state.initialAnswerText);
+  const [initalFile, setInitalFile] = useState(useLocation().state == null ? "" : useLocation().state.initialFile);
 
   useEffect(() => {
     console.log("Component mounted!");
@@ -59,17 +61,6 @@ const AnswerPage = () => {
 
   useMemo(() => {
     if (allAnswers === null) {
-
-      // const fetchCsvData = async () => {
-      //   try {
-      //     const response = await fetch("API_URL_HERE"); // Replace with your DRF API URL
-      //     const data = await response.blob(); // Get the response as a blob
-      //     const url = URL.createObjectURL(data);
-      //     setCsvUrl(url);
-      //   } catch (error) {
-      //     console.error("Error fetching the CSV data:", error);
-      //   }
-      // }; 
 
       axios
         .get(`/allanswer/?id=${questionID}`)
@@ -112,20 +103,6 @@ const AnswerPage = () => {
       }
     }
 
-    // for (const pair of formData.entries()) {
-    //   console.log(`${pair[0]}: ${pair[1]}`);
-    // }
-
-    // axios
-    //   .post("/answer/", formData, {
-    //     headers: {
-    //       "Content-Type": "multipart/form-data",
-    //       Authorization: `Bearer ${authTokens.access}`,
-    //     },
-    //   })
-    //   .then((res) => console.log(res))
-    //   .catch((err) => console.log(err));
-
     axios
       .post("/answer/", formData, {
         headers: {
@@ -134,6 +111,8 @@ const AnswerPage = () => {
       })
       .then((res) => {
         console.log(res);
+        setInitalAnswerText("");
+        setInitalFile(null);
       })
       .catch((err) => {
         if (err.response) {
@@ -148,15 +127,55 @@ const AnswerPage = () => {
       });
   };
 
+  const downloadAnswerCSV = (ans_id) => {
+    // console.log(e);
+    axios
+      .get(`/allanswer/`, {
+        params: {
+          answer_id: ans_id,
+          download_csv: true,
+        },
+        responseType: "blob", // Important for handling binary data
+      })
+      .then((res) => {
+        console.log(res);
+        console.log(res.headers["content-disposition"]);
+
+        const contentDisposition = res.headers["content-disposition"];
+        let filename = "download.csv"; 
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+          if (filenameMatch.length > 1) {
+            filename = filenameMatch[1];
+          }
+        }
+
+        // Create a blob from the response data
+        const blob = new Blob([res.data], { type: "csv" });
+
+        // Create a download link and trigger the download
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   const PostedAnswerSection = ({
     votes = 0,
     ans_csv_file = "",
+    answer_id = null,
     answer_text = "",
     username = "",
     upVotingFunction,
     downVotingFunction,
   }) => {
-    console.log(ans_csv_file);
+    // console.log(answer_id);
     return (
       <div className="flex gap-2 p-3 border-2 border-gray-400 border-dashed rounded">
         <div className="flex flex-col items-center justify-center gap-5">
@@ -182,7 +201,13 @@ const AnswerPage = () => {
           </div>
           <div>
             {" "}
-            <span className="font-bold"> CSV File: </span> <a href={ans_csv_file} download={ans_csv_file}>{ans_csv_file}</a>
+            <span className="font-bold"> CSV File: </span>{" "}
+            <a
+              className="hover:underline cursor-pointer"
+              onClick={() => downloadAnswerCSV(answer_id)}
+            >
+              {ans_csv_file.split('/').at(-1)}
+            </a>
           </div>
           <div>
             {" "}
@@ -192,6 +217,44 @@ const AnswerPage = () => {
         </div>
       </div>
     );
+  };
+
+  const downloadQuestionFile = (e) => {
+    axios
+      .get(`/allquestion/`, {
+        params: {
+          question_id: questionID,
+          download_csv: true,
+        },
+        responseType: "blob", // Important for handling binary data
+      })
+      .then((res) => {
+        console.log(res);
+        console.log(res.headers["content-disposition"]);
+
+        const contentDisposition = res.headers["content-disposition"];
+        let filename = "download.csv"; // Default filename if none is found
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+          if (filenameMatch.length > 1) {
+            filename = filenameMatch[1];
+          }
+        }
+
+        // Create a blob from the response data
+        const blob = new Blob([res.data], { type: "csv" });
+
+        // Create a download link and trigger the download
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   return (
@@ -204,7 +267,12 @@ const AnswerPage = () => {
 
         <div>
           <span className="text-2xl font-bold mr-2">CSV File:</span>
-          <span className="text-lg">{questionCSVFile}</span>
+          <span
+            className="text-lg hover:underline cursor-pointer"
+            onClick={downloadQuestionFile}
+          >
+            {questionCSVFile?.split("/").at(-1)}
+          </span>
         </div>
       </div>
 
@@ -226,6 +294,8 @@ const AnswerPage = () => {
             rows: 6,
             type: "",
           }}
+          initialValue={initalAnswerText}
+          setInitialValue={setInitalAnswerText}
         />
 
         <Section_1
@@ -241,6 +311,8 @@ const AnswerPage = () => {
             rows: 0,
             type: "file",
           }}
+          initialValue={initalFile}
+          setInitialValue={setInitalFile}
         />
 
         {authTokens == null ? (
@@ -268,11 +340,15 @@ const AnswerPage = () => {
           {allAnswers != null &&
             votingStates != null &&
             allAnswers?.map((ans, index) => {
+              // console.log(ans);
               return (
                 <PostedAnswerSection
                   key={index}
                   votes={votingStates[index]}
-                  ans_csv_file={ ans.ans_csv_file == null ? "No CSV File" : URL.createObjectURL(new Blob([ans.ans_csv_file]))}
+                  ans_csv_file={
+                    ans.ans_csv_file == null ? "No CSV File" : ans.ans_csv_file
+                  }
+                  answer_id={ans.id}
                   answer_text={ans.answer_text}
                   username={ans.user.name}
                   upVotingFunction={() => {

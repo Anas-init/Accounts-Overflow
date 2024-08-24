@@ -11,6 +11,7 @@ export const useAllQuestionStore = create((set) => ({
     axios
       .get("/allquestion/")
       .then((res) => {
+        console.log(res);
         set(() => ({ allQuestions: res?.data?.results }));
         set(() => ({ allQuestionPageRenderingArray: res?.data?.results }));
       })

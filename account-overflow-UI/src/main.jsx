@@ -12,6 +12,7 @@ import SignUp from './assets/Component/Sign_In_Up/SignUp.jsx';
 import Sidebar from './assets/Component/SideBarColumn/Sidebar.jsx';
 import AnswerPage from './assets/Component/Pages/AnswerPage.jsx';
 import TagAssociatedQuestionsPage from './assets/Component/Pages/TagAssociatedQuestionsPage.jsx';
+import Profile from './assets/Component/Pages/Profile.jsx';
 
 const router = createBrowserRouter([
   {
@@ -49,6 +50,10 @@ const router = createBrowserRouter([
       {
         path:"/tags/:tagName",
         element: <> <Sidebar/> <TagAssociatedQuestionsPage/> </>
+      },
+      {
+        path:"/profile",
+        element: <> <Sidebar/> <Profile/> </>
       },
     ]
   },

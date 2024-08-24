@@ -4,7 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 * {
     margin: 0;
     padding: 0;
@@ -34,4 +33,16 @@ body {
 
 ::-webkit-scrollbar-track {
     background-color: transparent;
+}
+
+/* Add this CSS */
+.options-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+}
+
+.options-content.expanded {
+    max-height: 1000px;
+    /* A large enough value to accommodate your content */
 }
