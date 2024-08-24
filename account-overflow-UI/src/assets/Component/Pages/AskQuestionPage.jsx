@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "./AskQuestionPage.css";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
@@ -6,6 +6,7 @@ import * as yup from "yup";
 import Section_1 from "../User Input Sections/Section_1";
 import axios from "../Axios/axios";
 import { useUserCredentials } from "../ZustandStore/user-credentials-store";
+import { useLocation } from "react-router-dom";
 
 const AskQuestionPage = () => {
   const resetAll = () => {
@@ -34,7 +35,7 @@ const AskQuestionPage = () => {
   const submitQuestion = (data) => {
     const formData = new FormData();
 
-    if(data["que_csv_file"]?.length == 0) delete data["que_csv_file"];
+    if (data["que_csv_file"]?.length == 0) delete data["que_csv_file"];
 
     for (const key in data) {
       if (key === "que_csv_file" && data[key].length > 0) {
@@ -48,17 +49,22 @@ const AskQuestionPage = () => {
     //   console.log(`${pair[0]}: ${pair[1]}`);
     // }
 
-    // console.log(data);
+    console.log(data);
 
-    axios
-      .post("/question/", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${authTokens.access}`,
-        },
-      })
-      .then((res) => console.log(res))
-      .catch((err) => console.log(err));
+    // axios
+    //   .post("/question/", formData, {
+    //     headers: {
+    //       "Content-Type": "multipart/form-data",
+    //       Authorization: `Bearer ${authTokens.access}`,
+    //     },
+    //   })
+    //   .then((res) => {
+    //     console.log(res);
+    //     setInitalFile("");
+    //     setInitalQuestionText("");
+    //     setInitalTags("");
+    //   })
+    //   .catch((err) => console.log(err));
   };
 
   const objectFormat = yup.object().shape({
@@ -72,7 +78,11 @@ const AskQuestionPage = () => {
     que_csv_file: yup
       .mixed()
       .test("is-valid-file", "Only CSV Files are acceptable", (value) => {
-        return !value || value?.length === 0 || value[0]?.name?.split(".")[1] === "csv";
+        return (
+          !value ||
+          value?.length === 0 ||
+          value[0]?.name?.split(".")[1] === "csv"
+        );
       })
       .notRequired(),
     tags: yup
@@ -91,6 +101,12 @@ const AskQuestionPage = () => {
   } = useForm({
     resolver: yupResolver(objectFormat),
   });
+
+  const [initalQuestionText, setInitalQuestionText] = useState(useLocation().state == null ? "" : useLocation().state.initialQuestionText);
+  const [initalFile, setInitalFile] = useState(useLocation().state == null ? "" : useLocation().state.initialFile);
+  const [initalTags, setInitalTags] = useState(useLocation().state == null ? "" : useLocation().state.initialTags);
+
+  // console.log(useLocation());
 
   return (
     <form
@@ -114,6 +130,8 @@ const AskQuestionPage = () => {
             rows: 6,
             type: "",
           }}
+          initialValue={initalQuestionText}
+          setInitialValue={setInitalQuestionText}
         />
 
         <Section_1
@@ -129,6 +147,8 @@ const AskQuestionPage = () => {
             rows: 0,
             type: "file",
           }}
+          initialValue={initalFile}
+          setInitialValue={setInitalFile}
         />
 
         <Section_1
@@ -144,6 +164,8 @@ const AskQuestionPage = () => {
             rows: 1,
             type: "",
           }}
+          initialValue={initalTags}
+          setInitialValue={setInitalTags}
         />
 
         <div className="flex justify-between">

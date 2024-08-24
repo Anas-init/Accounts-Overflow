@@ -8,11 +8,26 @@ import { useHamburgerStore } from "../ZustandStore/hamburger-store";
 import { useUserCredentials } from "../ZustandStore/user-credentials-store";
 import { useAllQuestionStore } from "../ZustandStore/all-questions-store";
 
-const Icon = (iconProps) => {
+// className={(e) =>
+//   e.isActive
+//     ? "flex items-center gap-2 w-full h-full p-1 rounded-full cursor-pointer bg-slate-300"
+//     : "flex items-center gap-2 w-full h-full p-1 rounded-full cursor-pointer"
+// }
+
+const Icon = ({
+  IconName,
+  runFunction,
+  to=""
+}) => {
   return (
-    <div className="px-2 h-full cursor-pointer rounded-md hover:bg-gray-200">
-      <iconProps.iconName className="h-[100%] w-6  " />
-    </div>
+    <NavLink to={to} onClick={runFunction} className={(e) =>
+      e.isActive
+        ? "px-2 h-full cursor-pointer rounded-md hover:bg-gray-200 bg-slate-300"
+        : "px-2 h-full cursor-pointer rounded-md hover:bg-gray-200"
+    }
+     >
+      <IconName className="h-[100%] w-6" />
+    </NavLink>
   );
 };
 
@@ -96,9 +111,15 @@ const Navbar = () => {
 
       {/* Icons */}
       <div className="flex gap-1 justify-around h-full items-center max-[600px]:hidden">
-        <Icon iconName={CgProfile} />
-        <Icon iconName={GiDiamondTrophy} />
-        <Icon iconName={MdHelpCenter} />
+        <Icon IconName={CgProfile} to={"/profile"} runFunction={() => {
+          navigate("/profile")
+        }} />
+        <Icon IconName={GiDiamondTrophy} to={"/trophy"} runFunction={() => {
+          // navigate("/profile")
+        }} />
+        <Icon IconName={MdHelpCenter} to={"/help"} runFunction={() => {
+          // navigate("/profile")
+        }} />
       </div>
 
       {authTokens == null ? (
