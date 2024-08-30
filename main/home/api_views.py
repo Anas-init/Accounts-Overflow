@@ -203,7 +203,20 @@ class QuestionView(APIView):
                 return Response({"error":"Question record not found"}, status=status.HTTP_404_NOT_FOUND)
         else:
             return Response({"error":"Question id is not provided"},status=status.HTTP_404_NOT_FOUND)
-                
+    def delete(self, request,format=None):
+        question_id=request.query_params.get('id')
+        if request and not request.user.is_authenticated:
+            return Response({'error': 'User is not authenticated'},status=status.HTTP_401_UNAUTHORIZED)
+        if question_id:
+            try:
+                question=Questions.objects.get(id=question_id)
+                os.remove(os.path.join(settings.MEDIA_ROOT, question.que_csv_file.name))
+                question.delete()
+                return Response({'msg': 'Question deleted successfully'},status=status.HTTP_200_OK)
+            except Questions.DoesNotExist:
+                return Response({"error":"Question record not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"error" : "Question id not provided"}, status=status.HTTP_400_BAD_REQUEST)
 class AnswerView( APIView):
     renderer_classes = [BaseRenderer]
     def post(self,request,format=None):
@@ -259,7 +272,20 @@ class AnswerView( APIView):
                 return Response({"error":"Answer record not found"}, status=status.HTTP_404_NOT_FOUND)
         else:
             return Response({"error":"Answer id is not provided"},status=status.HTTP_404_NOT_FOUND)
-            
+    def delete(self, request,format=None):
+        answer_id=request.query_params.get('id')
+        if request and not request.user.is_authenticated:
+            return Response({'error': 'User is not authenticated'},status=status.HTTP_401_UNAUTHORIZED)
+        if answer_id:
+            try:
+                answer=Answers.objects.get(id=answer_id)
+                os.remove(os.path.join(settings.MEDIA_ROOT, answer.ans_csv_file.name))
+                answer.delete()
+                return Response({'msg': 'Answer deleted successfully'},status=status.HTTP_200_OK)
+            except Questions.DoesNotExist:
+                return Response({"error":"Answer record not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"error" : "Answer id not provided"}, status=status.HTTP_400_BAD_REQUEST)
 class SearchView(APIView):
     renderer_classes = [BaseRenderer]
     search_fields = ['$question_text']
