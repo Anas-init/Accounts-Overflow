@@ -110,6 +110,20 @@ class UserProfileView(APIView):
     def get(self, request):
         serializer=UserProfileSerializer(request.user)
         return Response(serializer.data,status=status.HTTP_200_OK)
+    def delete(self, request):
+        user_id=request.query_params.get('id')
+        if user_id:
+            try:
+                user=MyUser.objects.get(id=user_id)
+                if user:
+                    user.delete()
+                    return Response({'msg': 'User deleted successfully'},status=status.HTTP_200_OK)
+                else:
+                    return Response({'error':'User not found'},status=status.HTTP_404_NOT_FOUND)
+            except MyUser.DoesNotExist:
+                return Response({'error':'User does not exist'},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'error':'user id not provided'},status=status.HTTP_400_BAD_REQUEST)
 class UserChangePasswordView(APIView):
     renderer_classes=[BaseRenderer]
     permission_classes=[IsAuthenticated]

@@ -13,7 +13,7 @@ urlpatterns = [
     path('reset/<uid>/<token>/',UserPasswordResetView.as_view(),name='password_reset'),
     path('refresh/',GenerateAccessToken.as_view(),name='password_reset'),
     path('profileinfo/',UserProfileInfoView.as_view(),name='profile-info'),
-    
+    path('deleteuser/',UserProfileView.as_view(),name='delete-user'),
     
     #Question APIs
     path('allquestion/',QuestionView.as_view(),name='all-question'),
