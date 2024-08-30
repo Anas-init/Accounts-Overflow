@@ -116,6 +116,12 @@ class UserProfileView(APIView):
             try:
                 user=MyUser.objects.get(id=user_id)
                 if user:
+                    answer_items=Answers.objects.filter(user=request.user)
+                    for answer in answer_items:
+                        os.remove(os.path.join(settings.MEDIA_ROOT, answer.ans_csv_file.name))
+                    question_items=Questions.objects.filter(user=request.user)
+                    for question in question_items:
+                        os.remove(os.path.join(settings.MEDIA_ROOT,question.que_csv_file.name))
                     user.delete()
                     return Response({'msg': 'User deleted successfully'},status=status.HTTP_200_OK)
                 else:
