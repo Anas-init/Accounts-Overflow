@@ -19,13 +19,13 @@ urlpatterns = [
     path('allquestion/',QuestionView.as_view(),name='all-question'),
     path('question/',QuestionView.as_view(),name='questions-list'),
     path('update-question/',QuestionView.as_view(),name='update-question'),
-    
+    path('delete-question/',QuestionView.as_view(),name='delete-question'),
     
     #ANSWER APIs
     path('allanswer/',AnswerView.as_view(),name='all-answer'),
     path('answer/',AnswerView.as_view(),name='create-answer'),
     path('update-answer/',AnswerView.as_view(),name='update-answer'),
-    
+    path('delete-answer/',AnswerView.as_view(),name='delete-answer'),
     #SEARCH APIs
     path('lookup/',SearchView.as_view(),name='search-question'),
 
