@@ -12,7 +12,7 @@ import SignUp from './assets/Component/Sign_In_Up/SignUp.jsx';
 import Sidebar from './assets/Component/SideBarColumn/Sidebar.jsx';
 import AnswerPage from './assets/Component/Pages/AnswerPage.jsx';
 import TagAssociatedQuestionsPage from './assets/Component/Pages/TagAssociatedQuestionsPage.jsx';
-import Profile from './assets/Component/Pages/Profile.jsx';
+import MyProfile from './assets/Component/Pages/Profile/MyProfile.jsx';
 
 const router = createBrowserRouter([
   {
@@ -53,7 +53,7 @@ const router = createBrowserRouter([
       },
       {
         path:"/profile",
-        element: <> <Sidebar/> <Profile/> </>
+        element: <> <Sidebar/> <MyProfile/> </>
       },
     ]
   },

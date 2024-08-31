@@ -1,7 +1,6 @@
 // import { useLocation } from 'react-router-dom';
 import { useMemo, useEffect, useState } from "react";
 import Navbar from "./assets/Component/NavigationBar/Navbar.jsx";
-import Profile from "./assets/Component/Pages/Profile.jsx";
 import Sidebar from "./assets/Component/SideBarColumn/Sidebar.jsx";
 import { Outlet } from "react-router-dom";
 import { useHamburgerStore } from "./assets/Component/ZustandStore/hamburger-store.js";
