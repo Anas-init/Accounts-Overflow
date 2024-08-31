@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import axios from "../Axios/axios";
+import { useMyQuestionsAndAnswersStore } from "./my-questions-and-answers";
 
 export const useUserCredentials = create((set, get) => ({
   authTokens:
@@ -12,8 +13,15 @@ export const useUserCredentials = create((set, get) => ({
   },
 
   logOutUser: () => {
+    // const { resetMyQuestionsAndAnswers } = useMyQuestionsAndAnswersStore(
+    //   (state) => ({
+    //     resetMyQuestionsAndAnswers: state.resetMyQuestionsAndAnswers,
+    //   })
+    // );
+
     window.localStorage.removeItem("token");
     set(() => ({ authTokens: null }));
+    // resetMyQuestionsAndAnswers();
   },
 
   updateToken: () => {

@@ -51,20 +51,20 @@ const AskQuestionPage = () => {
 
     console.log(data);
 
-    // axios
-    //   .post("/question/", formData, {
-    //     headers: {
-    //       "Content-Type": "multipart/form-data",
-    //       Authorization: `Bearer ${authTokens.access}`,
-    //     },
-    //   })
-    //   .then((res) => {
-    //     console.log(res);
-    //     setInitalFile("");
-    //     setInitalQuestionText("");
-    //     setInitalTags("");
-    //   })
-    //   .catch((err) => console.log(err));
+    axios
+      .post("/question/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${authTokens.access}`,
+        },
+      })
+      .then((res) => {
+        console.log(res);
+        setInitalFile("");
+        setInitalQuestionText("");
+        setInitalTags("");
+      })
+      .catch((err) => console.log(err));
   };
 
   const objectFormat = yup.object().shape({

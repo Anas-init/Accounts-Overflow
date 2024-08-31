@@ -28,7 +28,7 @@ const MyProfile = () => {
 
   useMemo(() => {
     if (myAnswers == null || myQuestions == null) {
-      setMyQuestionsAndAnswers(authTokens.authTokens.access, "", null, null);
+      setMyQuestionsAndAnswers(authTokens?.authTokens?.access, "", null, null);
     }
   }, []);
 

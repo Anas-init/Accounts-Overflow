@@ -113,6 +113,7 @@ const AnswerPage = () => {
         console.log(res);
         setInitalAnswerText("");
         setInitalFile(null);
+        location.reload(true);
       })
       .catch((err) => {
         if (err.response) {

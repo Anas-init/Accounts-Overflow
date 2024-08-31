@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import Button_1 from "../../../Buttons/Button_1";
 import { useMyQuestionsAndAnswersStore } from "../../../ZustandStore/my-questions-and-answers";
 import { useUserCredentials } from "../../../ZustandStore/user-credentials-store";
+import axios from "../../../Axios/axios";
 
 const MyAnswer = React.memo(({ optionID, currentOpenedContainer }) => {
   const { myAnswers, setMyQuestionsAndAnswers } = useMyQuestionsAndAnswersStore(
@@ -22,13 +23,31 @@ const MyAnswer = React.memo(({ optionID, currentOpenedContainer }) => {
   useMemo(() => {
     if (myAnswers == null) {
       setMyQuestionsAndAnswers(
-        authTokens.authTokens.access,
+        authTokens?.authTokens?.access,
         "Answer",
         setCurrentAnswer,
         setCurrentAnswerCSV
       );
+    } else {
+      setCurrentAnswer(myAnswers.length == 0 ? "No Answers Posted" : myAnswers[currentAnswerIndex]?.answer_text);
+      setCurrentAnswerCSV(myAnswers.length == 0 ? "No Answers Posted" : myAnswers[currentAnswerIndex]?.ans_csv_file);
     }
   }, []);
+
+  const handleDelete = () => {
+    axios.delete(`/delete-answer/?id=${myAnswers[currentAnswerIndex].id}`, {
+      headers: {
+        Authorization: `Bearer ${authTokens?.authTokens?.access}`,
+      },
+    })
+    .then((res) => {
+      console.log(res);
+      location.reload(true);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+  }
 
   const handleUpdate = () => {
     if (currentAnswer.length <= 15) {
@@ -42,19 +61,37 @@ const MyAnswer = React.memo(({ optionID, currentOpenedContainer }) => {
     }
 
     const data = newAnswerCSV
-      ? { question: currentAnswer, csv: newAnswerCSV }
-      : { question: currentAnswer };
+      ? { answer_text: currentAnswer, ans_csv_file: newAnswerCSV }
+      : { answer_text: currentAnswer };
 
     console.log(data);
+    const formData = new FormData();
+    for (const key in data) {
+        formData.append(key, data[key]);
+    }
 
-    // axios
-    //   .put("/api/updateQuestion", data) // Replace with your actual API endpoint
-    //   .then((response) => {
-    //     // Handle success
-    //   })
-    //   .catch((error) => {
-    //     // Handle error
-    //   });
+    for (const pair of formData.entries()) {
+      console.log(`${pair[0]}: ${pair[1]}`);
+    }
+
+    axios
+      .put(
+        `/update-answer/?id=${myAnswers[currentAnswerIndex].id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${authTokens?.authTokens?.access}`,
+          },
+        }
+      )
+      .then((response) => {
+        console.log(response);
+        location.reload(true);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   const handleFileChange = (e) => {
@@ -140,7 +177,10 @@ const MyAnswer = React.memo(({ optionID, currentOpenedContainer }) => {
               >
                 Update
               </button>
-              <button className="p-2 rounded bg-red-500 text-white transition-all hover:scale-105">
+              <button 
+                className="p-2 rounded bg-red-500 text-white transition-all hover:scale-105"
+                onClick={handleDelete}  
+              >
                 Delete
               </button>
             </div>

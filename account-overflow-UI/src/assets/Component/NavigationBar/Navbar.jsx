@@ -7,12 +7,7 @@ import { useSideBarStore } from "../ZustandStore/sidebar-store";
 import { useHamburgerStore } from "../ZustandStore/hamburger-store";
 import { useUserCredentials } from "../ZustandStore/user-credentials-store";
 import { useAllQuestionStore } from "../ZustandStore/all-questions-store";
-
-// className={(e) =>
-//   e.isActive
-//     ? "flex items-center gap-2 w-full h-full p-1 rounded-full cursor-pointer bg-slate-300"
-//     : "flex items-center gap-2 w-full h-full p-1 rounded-full cursor-pointer"
-// }
+import { useMyQuestionsAndAnswersStore } from "../ZustandStore/my-questions-and-answers";
 
 const Icon = ({
   IconName,
@@ -46,6 +41,11 @@ const Navbar = () => {
     allQuestions: state.allQuestions,
     setAllQuestionPageRenderingArray: state.setAllQuestionPageRenderingArray,
   }));
+  const { resetMyQuestionsAndAnswers } = useMyQuestionsAndAnswersStore(
+    (state) => ({
+      resetMyQuestionsAndAnswers: state.resetMyQuestionsAndAnswers,
+    })
+  );
   const navigate = useNavigate();
 
   return (
@@ -111,8 +111,8 @@ const Navbar = () => {
 
       {/* Icons */}
       <div className="flex gap-1 justify-around h-full items-center max-[600px]:hidden">
-        <Icon IconName={CgProfile} to={"/profile"} runFunction={() => {
-          navigate("/profile")
+        <Icon IconName={CgProfile} to={authTokens == null ? "/signIn" : "/profile"} runFunction={() => {
+          authTokens == null ? navigate("/signIn") :  navigate("/profile")
         }} />
         <Icon IconName={GiDiamondTrophy} to={"/trophy"} runFunction={() => {
           // navigate("/profile")
@@ -138,6 +138,7 @@ const Navbar = () => {
           onClick={() => {
             navigate("/");
             logOutUser();
+            resetMyQuestionsAndAnswers();
           }}
           className="bg-blue-500 text-white text-center w-28 py-1 px-3 rounded-full max-[750px]:w-24 transition-all hover:scale-105"
         >

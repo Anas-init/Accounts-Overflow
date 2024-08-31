@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 import Button_1 from "../../../Buttons/Button_1";
 import Input_Field from "./Input_Field";
+import axios from "../../../Axios/axios";
+import { useUserCredentials } from "../../../ZustandStore/user-credentials-store";
 
 const UpdatePassword = React.memo(({ optionID, currentOpenedContainer }) => {
   const [currPass, setCurrPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmNewPass, setConfirmNewPass] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const { authTokens } = useUserCredentials(state => ({
+    authTokens: state.authTokens
+  }));
 
   const handleUpdate = () => {
     if (newPass.length <= 7) {
@@ -20,14 +25,27 @@ const UpdatePassword = React.memo(({ optionID, currentOpenedContainer }) => {
     }
 
     const passwordUpdateData = {
-      currentPassword: currPass,
-      newPassword: newPass,
-      confirmNewPassword: confirmNewPass,
+      // currentPassword: currPass,
+      password: `"` + newPass + `"`,
+      password2: `"` + confirmNewPass + `"`,
     };
 
     console.log("Password update object:", passwordUpdateData);
+    // console.log(authTokens.access);
 
     // Add your API call or other logic here
+    axios.post('/change/', passwordUpdateData, {
+      headers: {
+        Authorization: `Bearer ${authTokens?.access}`
+      }
+    })
+    .then((res) => {
+      console.log(res);
+      location.reload(true);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
 
     // Clear error message after successful validation
     setErrorMessage("");

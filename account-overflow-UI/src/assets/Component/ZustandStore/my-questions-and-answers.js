@@ -38,4 +38,8 @@ export const useMyQuestionsAndAnswersStore = create((set) => ({
         set(() => ({ myAnswers: null }));
       });
   },
+  resetMyQuestionsAndAnswers: () => {
+    set(() => ({myQuestions: null}));
+    set(() => ({myAnswers: null}));
+  }
 }));
