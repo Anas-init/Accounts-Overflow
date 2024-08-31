@@ -1,0 +1,435 @@
+import React, { useMemo, useState, useCallback } from "react";
+// import { CgProfile } from "react-icons/cg";
+import { FaGreaterThan } from "react-icons/fa";
+import PermIdentityOutlinedIcon from "@mui/icons-material/PermIdentityOutlined";
+import "../../../index.css";
+import Button_1 from "../Buttons/Button_1";
+// import { useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import { useMyQuestionsAndAnswersStore } from "../ZustandStore/my-questions-and-answers";
+import { useUserCredentials } from "../ZustandStore/user-credentials-store";
+// import { useUserCredentials } from "./user-credentials-store";
+
+const Profile = () => {
+  const { myQuestions, myAnswers, setMyQuestionsAndAnswers } =
+    useMyQuestionsAndAnswersStore((state) => ({
+      myQuestions: state.myQuestions,
+      myAnswers: state.myAnswers,
+      setMyQuestionsAndAnswers: state.setMyQuestionsAndAnswers,
+    }));
+  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [currentQuestionCSV, setCurrentQuestionCSV] = useState("");
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [currentAnswer, setCurrentAnswer] = useState("");
+  const [currentAnswerCSV, setCurrentAnswerCSV] = useState("");
+  const [currentAnswerIndex, setCurrentAnswerIndex] = useState(0);
+  const [currentOpenedContainer, setCurrentOpenedContainer] = useState(0);
+  const authTokens = useUserCredentials((state) => ({
+    authTokens: state.authTokens,
+  }));
+
+  useMemo(() => {
+    if (myAnswers == null || myQuestions == null) {
+      setMyQuestionsAndAnswers(
+        authTokens.authTokens.access,
+        setCurrentQuestion,
+        setCurrentAnswer,
+        setCurrentQuestionCSV,
+        setCurrentAnswerCSV
+      );
+      // setCurrentQuestion(myQuestions[0]);
+      // setCurrentAnswer(myAnswers[0]);
+    }
+  }, []);
+  
+
+  const updateContainer = useCallback(
+    (optionID) => {
+      if (currentOpenedContainer == optionID[optionID.length - 1])
+        setCurrentOpenedContainer(0);
+      else setCurrentOpenedContainer(optionID[optionID.length - 1]);
+    },
+    [currentOpenedContainer]
+  );
+
+  const MyQuestions = ({ optionID }) => {
+    return (
+      <div
+        id={optionID}
+        className={
+          currentOpenedContainer == optionID[optionID.length - 1]
+            ? "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out expanded"
+            : "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out"
+        }
+      >
+        <div className="flex flex-col gap-3 p-2 m-2 border-4 border-gray-300 rounded border-dashed">
+          <input
+            type="text"
+            placeholder="Enter tag or question to filter"
+            className="p-2 outline-0 border-b-2 border-gray-200"
+          />
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Question: </span>
+              <textarea
+                className="border-2 p-2 w-full rounded outline-none"
+                value={currentQuestion}
+                onChange={(e) => setCurrentQuestion(e.target.value)}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">CSV File: </span>
+              <div>
+                {currentQuestionCSV == null
+                  ? "No CSV File"
+                  : currentQuestionCSV}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Choose New CSV File Here: </span>
+              <input type="file" accept=".csv" />
+            </div>
+          </div>
+
+          <div className="m-1 flex gap-2">
+            <button
+              className="p-2 rounded bg-blue-500 text-white transition-all hover:scale-105"
+            >
+              Update
+            </button>
+            <button className="p-2 rounded bg-red-500 text-white transition-all hover:scale-105">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div className="m-1 flex justify-between px-2 gap-2">
+          <Button_1
+            runFunction={() => {
+              if (currentQuestionIndex > 0) {
+                setCurrentQuestion(
+                  myQuestions[currentQuestionIndex - 1].question_text
+                );
+                setCurrentQuestionCSV(
+                  myQuestions[currentQuestionIndex - 1].que_csv_file
+                );
+                setCurrentQuestionIndex(currentQuestionIndex - 1);
+              }
+            }}
+            buttonName="Previous Question"
+          />
+          <Button_1
+            runFunction={() => {
+              if (currentQuestionIndex < myQuestions.length - 1) {
+                setCurrentQuestion(
+                  myQuestions[currentQuestionIndex + 1].question_text
+                );
+                setCurrentQuestionCSV(
+                  myQuestions[currentQuestionIndex + 1].que_csv_file
+                );
+                setCurrentQuestionIndex(currentQuestionIndex + 1);
+              }
+            }}
+            buttonName="Next Question"
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const MyAnswers = ({ optionID }) => {
+    return (
+      <div
+        id={optionID}
+        className={
+          currentOpenedContainer == optionID[optionID.length - 1]
+            ? "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out expanded"
+            : "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out"
+        }
+      >
+        <div className="flex flex-col gap-3 p-2 m-2 border-4 border-gray-300 rounded border-dashed">
+          <input
+            type="text"
+            placeholder="Enter tag or question to filter"
+            className="p-2 outline-0 border-b-2 border-gray-200"
+          />
+
+          <div className="">
+            <span className="font-bold mr-2">Question: </span>
+            <span>
+              Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dolores
+              accusamus quam sequi, porro sunt repellat voluptatibus officia
+              quidem aperiam corporis fugit placeat quis a eveniet, minima
+              possimus facilis commodi dicta? Ad aperiam expedita atque dolor.
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Answer: </span>
+              <textarea
+                type="text"
+                className="border-2 p-2 w-full rounded outline-none"
+                value={currentAnswer}
+                onChange={(e) => {setCurrentAnswer(e.target.value)}}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">CSV File: </span>
+              <div>
+                {currentAnswerCSV == null ? "No CSV File" : currentAnswerCSV}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Choose New CSV File Here: </span>
+              <input type="file" accept=".csv" />
+            </div>
+          </div>
+
+          <div className="m-1 flex gap-2">
+            <button
+              className="p-2 rounded bg-blue-500 text-white transition-all hover:scale-105"
+            >
+              Update
+            </button>
+            <button className="p-2 rounded bg-red-500 text-white transition-all hover:scale-105">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div className="m-1 flex justify-between px-2 gap-2">
+          <Button_1
+            runFunction={() => {
+              if (currentAnswerIndex > 0) {
+                setCurrentAnswer(myAnswers[currentAnswerIndex - 1].answer_text);
+                setCurrentAnswerCSV(
+                  myAnswers[currentAnswerIndex - 1].ans_csv_file
+                );
+                setCurrentAnswerIndex(currentAnswerIndex - 1);
+              }
+            }}
+            buttonName="Previous Question"
+          />
+          <Button_1
+            runFunction={() => {
+              if (currentAnswerIndex < myAnswers.length - 1) {
+                setCurrentAnswer(myAnswers[currentAnswerIndex + 1].answer_text);
+                setCurrentAnswerCSV(
+                  myAnswers[currentAnswerIndex + 1].ans_csv_file
+                );
+                setCurrentAnswerIndex(currentAnswerIndex + 1);
+              }
+            }}
+            buttonName="Next Question"
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const UpdateUserName = ({ optionID }) => {
+    return (
+      <div
+        id={optionID}
+        className={
+          currentOpenedContainer == optionID[optionID.length - 1]
+            ? "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out expanded"
+            : "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out"
+        }
+      >
+        <div className="flex flex-col gap-2 p-2 m-2 border-4 border-gray-300 rounded border-dashed">
+          <input
+            className="p-2 rounded border-2 my-2"
+            type="text"
+            placeholder="Enter Current Username"
+          />
+          <input
+            className="p-2 rounded border-2 my-2"
+            type="text"
+            placeholder="Enter Updated Username"
+          />
+          <Button_1 runFunction={() => {}} buttonName="Update" />
+        </div>
+      </div>
+    );
+  };
+
+  const UpdateEmail = ({ optionID }) => {
+    return (
+      <div
+        id={optionID}
+        className={
+          currentOpenedContainer == optionID[optionID.length - 1]
+            ? "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out expanded"
+            : "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out"
+        }
+      >
+        <div className="flex flex-col gap-2 p-2 m-2 border-4 border-gray-300 rounded border-dashed">
+          <input
+            className="p-2 rounded border-2 my-2"
+            type="text"
+            placeholder="Enter Current Email"
+          />
+          <input
+            className="p-2 rounded border-2 my-2"
+            type="text"
+            placeholder="Enter Updated Email"
+          />
+          <Button_1 runFunction={() => {}} buttonName="Update" />
+        </div>
+      </div>
+    );
+  };
+
+  const UpdatePassword = ({ optionID }) => {
+    return (
+      <div
+        id={optionID}
+        className={
+          currentOpenedContainer == optionID[optionID.length - 1]
+            ? "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out expanded"
+            : "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out"
+        }
+      >
+        <div className="flex flex-col gap-2 p-2 m-2 border-4 border-gray-300 rounded border-dashed">
+          <input
+            className="p-2 rounded border-2 my-2"
+            type="text"
+            placeholder="Enter Current Password"
+          />
+          <input
+            className="p-2 rounded border-2 my-2"
+            type="text"
+            placeholder="Enter New Password"
+          />
+          <input
+            className="p-2 rounded border-2 my-2"
+            type="text"
+            placeholder="Re-Enter New Password"
+          />
+          <Button_1 runFunction={() => {}} buttonName="Update" />
+        </div>
+      </div>
+    );
+  };
+
+  const MyContributions = ({ optionID }) => {
+    return (
+      <div
+        id={optionID}
+        className={
+          currentOpenedContainer == optionID[optionID.length - 1]
+            ? "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out expanded"
+            : "options-content max-h-0 overflow-hidden transition-[max-height] duration-500 ease-in-out"
+        }
+      >
+        <div className="flex flex-col gap-2 p-2 m-2 border-4 border-gray-300 rounded border-dashed">
+          <div>
+            <span className="font-semibold">Total Questions Asked: </span>
+            <span>3487</span>
+          </div>
+
+          <div>
+            <span className="font-semibold">Total Answers Posted: </span>
+            <span>3745</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const OptionContainer = ({
+    iconID,
+    optionID,
+    optionType,
+    OptionDescription,
+  }) => {
+    return (
+      <section className="border-t-2 border-gray-300 flex flex-col gap-4 px-3 py-2">
+        <div className="flex gap-2 items-center transition-all">
+          <FaGreaterThan
+            id={iconID}
+            className={
+              currentOpenedContainer == optionID[optionID.length - 1]
+                ? "cursor-pointer transition-all rotate-90"
+                : "cursor-pointer transition-all"
+            }
+            onClick={(event) => {
+              updateContainer(optionID);
+            }}
+          />
+          <span className="text-xl font-semibold">{optionType}</span>
+        </div>
+
+        <OptionDescription optionID={optionID} />
+      </section>
+    );
+  };
+
+  return (
+    <div className="max-[980px]:w-full max-[600px]:left-0 max-[600px]:z-10 flex flex-col w-[94%] h-max relative left-24 overflow-x-hidden overflow-y-scroll top-[3.95rem] max-[600px]:top-[5.3rem]">
+      <section className="rounded p-4 flex flex-col gap-5 justify-center items-center">
+        <div className="h-40 w-40 rounded-full border-4 border-gray-300 flex justify-center items-center">
+          <PermIdentityOutlinedIcon
+            sx={{ color: "lightgray", width: 150, height: 150 }}
+          />
+        </div>
+        <div className="font-bold text-lg">Hello Username!</div>
+        <input type="file" accept="images/*" className="hidden" />
+        <button
+          className="text-blue-500 hover:underline cursor-pointer"
+          onClick={(event) => {
+            event.target.previousElementSibling.click();
+          }}
+        >
+          Choose a Profile Photo
+        </button>
+      </section>
+
+      <OptionContainer
+        iconID={"bullet-icon-1"}
+        optionID={"option-1"}
+        optionType={"My Questions"}
+        OptionDescription={MyQuestions}
+      />
+      <OptionContainer
+        iconID={"bullet-icon-2"}
+        optionID={"option-2"}
+        optionType={"My Answers"}
+        OptionDescription={MyAnswers}
+      />
+      <OptionContainer
+        iconID={"bullet-icon-3"}
+        optionID={"option-3"}
+        optionType={"Update Username"}
+        OptionDescription={UpdateUserName}
+      />
+      <OptionContainer
+        iconID={"bullet-icon-4"}
+        optionID={"option-4"}
+        optionType={"Update Email"}
+        OptionDescription={UpdateEmail}
+      />
+      <OptionContainer
+        iconID={"bullet-icon-5"}
+        optionID={"option-5"}
+        optionType={"Update Password"}
+        OptionDescription={UpdatePassword}
+      />
+      <OptionContainer
+        iconID={"bullet-icon-6"}
+        optionID={"option-6"}
+        optionType={"My Contributions"}
+        OptionDescription={MyContributions}
+      />
+    </div>
+  );
+};
+
+export default Profile;
