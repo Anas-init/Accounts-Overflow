@@ -78,7 +78,7 @@ class SendResetEmailSerializer(serializers.Serializer):
       Utils.send_data(data)
       return attrs
     else:
-      return serializers.ValidationError("User is not registered")
+      raise serializers.ValidationError("User is not registered")
     
       
 class UserPasswordResetViewSerializer(serializers.Serializer):
@@ -117,9 +117,17 @@ class QuestionSerializer(serializers.ModelSerializer):
       raise serializers.ValidationError("User must be logged in")
     else:
       return attrs
-  def create(self,validated_data):
-    request=self.context.get('request')
-    validated_data['user']=request.user
+  def create(self, validated_data):
+    request = self.context.get('request')
+    try:
+        file = validated_data['que_csv_file']
+        file_extension = os.path.splitext(file.name)[1]  
+        new_file_name = f"{os.path.splitext(file.name)[0]}_{request.user.id}{file_extension}"  
+        file.name = new_file_name
+        validated_data['que_csv_file'] = file
+    except KeyError:
+        pass
+    validated_data['user'] = request.user
     return super().create(validated_data)
   def update(self, instance, validated_data):
     new_file = validated_data.get('que_csv_file')
@@ -158,6 +166,17 @@ class AnswerSerializer(serializers.ModelSerializer):
       raise serializers.ValidationError("User must be logged in")
     else:
       return attrs   
+  def create(self,validated_data):
+    request = self.context.get('request')
+    try:
+        file = validated_data['ans_csv_file']
+        file_extension = os.path.splitext(file.name)[1]  
+        new_file_name = f"{os.path.splitext(file.name)[0]}_{request.user.id}{file_extension}"  
+        file.name = new_file_name
+        validated_data['ans_csv_file'] = file
+    except KeyError:
+        pass
+    return super().create(validated_data)
   def update(self, instance, validated_data):
     new_file = validated_data.get('ans_csv_file')
 

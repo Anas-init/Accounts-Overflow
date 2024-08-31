@@ -387,7 +387,10 @@ class UserProfileInfoView(APIView):
             user=MyUser.objects.get(name=username)
             if user is not None:
                 serializer=ProfileInfoViewSerializer(user)
-                return Response({'data':serializer.data,'flag':False},status=status.HTTP_200_OK)
+                if request and request.user.is_authenticated and request.user.name == user.name:
+                    return Response({'data': serializer.data,'flag': True},status=status.HTTP_200_OK)
+                else:
+                    return Response({'data':serializer.data,'flag':False},status=status.HTTP_200_OK)
             else:
                 return Response({'msg': 'Invalid username'},status=status.HTTP_404_NOT_FOUND)
         else:
