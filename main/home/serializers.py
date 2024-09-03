@@ -44,11 +44,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
     fields=['email', 'name']
     
 class UserChangePasswordSerializer(serializers.Serializer):
+  current_password=serializers.CharField(style={'input_type':'password'},write_only=True)
   password=serializers.CharField(style={'input_type':'password'}, write_only=True)
   password2=serializers.CharField(style={'input_type':'password'}, write_only=True)
   class Meta:
-    fields=['password', 'password2']
-    
+    fields=['current_password','password', 'password2']   
   def validate(self, attrs):
     password=attrs.get('password')
     password2=attrs.get('password2')

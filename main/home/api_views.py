@@ -29,8 +29,11 @@ genai.configure(api_key=API_KEY)
 
 def generate_descriptions(paragraph):
     prompt = f"""
-    You are given a paragraph that contains multiple topics separated by commas. Your task is to provide a one-line description for each topic. The format should be:
-
+    You are given a paragraph that contains multiple topics separated by commas. Your task is to provide a one-line description for each topic. 
+    Beware Don't skip any description of topic remember that!
+    If you skip any topic , this will harm your reputation.
+    
+    The format should be:
     Format:
     topic name: description
 
