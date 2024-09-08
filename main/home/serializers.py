@@ -44,21 +44,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
     fields=['email', 'name']
     
 class UserChangePasswordSerializer(serializers.Serializer):
-  current_password=serializers.CharField(style={'input_type':'password'},write_only=True)
   password=serializers.CharField(style={'input_type':'password'}, write_only=True)
   password2=serializers.CharField(style={'input_type':'password'}, write_only=True)
   class Meta:
-    fields=['current_password','password', 'password2']   
+    fields=['password', 'password2']   
   def validate(self, attrs):
     password=attrs.get('password')
     password2=attrs.get('password2')
     user=self.context.get('user')
-    if(password != password2):
-      raise serializers.ValidationError("Password mismatch")
-    user.set_password(password)
-    user.save()
-    return attrs
-
+    if user.check_password(password):
+          user.set_password(password2)
+          user.save()
+          return attrs
+    raise serializers.ValidationError ("Incorrect old password")
 class SendResetEmailSerializer(serializers.Serializer):
   email=serializers.EmailField(max_length=255)
   class Meta:
