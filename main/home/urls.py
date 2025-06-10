@@ -1,7 +1,10 @@
 from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
-from .api_views import UserregistrationView,UserLogin,UserProfileView,UserChangePasswordView,UserResetSendEmailView,UserPasswordResetView,QuestionView,AnswerView,SearchView,GenerateAccessToken,TagsView,TagsRecordView,UserProfileInfoView
+from home.apis.user import UserregistrationView,UserLogin,UserProfileView,UserChangePasswordView,UserResetSendEmailView,UserPasswordResetView,GenerateAccessToken,UserProfileInfoView
+from home.apis.answers import AnswerView
+from home.apis.questions import QuestionView,SearchView
+from home.apis.tags import TagsView,TagsRecordView
 app_name="home"
 urlpatterns = [
     #User APIs
